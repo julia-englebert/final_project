@@ -10,6 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 options(scipen = 999)
 
+library(shiny)
 library(haven)
 library(tidyverse)
 library(gt)
@@ -17,6 +18,10 @@ library(devtools)
 library(tibble)
 library(foreign)
 library(scales)
+library(shinythemes)
+library(plotly)
+library(leaflet)
+library(broom)
 
 # packages for mapping
 library(leaflet)
@@ -80,7 +85,7 @@ data1870j <- full_join(data1870a, data1870b, by = c("STATEA", "COUNTYA")) %>%
   
   # Mutate again to make new variables out of the ones you just created in the last mutate
   
-  mutate(cows_per_person = cows/n_farm, pct_enrolled = enrolled/pop, pct_illiterate = illiterate/pop) %>%
+  mutate(cows_per_person = cows/n_farm, pct_enrolled = enrolled/pop*100, pct_illiterate = illiterate/pop*100) %>%
   
   # Select the desired variables
   
@@ -107,7 +112,7 @@ data1880j <- full_join(data1880a, data1880b, by = c("STATEA", "COUNTYA")) %>%
          avg_size = APG001, value_implements = APO001, pop = AOT001, male = AP1001, female = AP1002, 
          enrolled = NA, urban_pop = AO4001, pct_urban = AO4001/AOT001*100, illiterate = NA, 
          acres_farms = AOR001, acres_irrigated = NA, pct_irrigated = NA) %>%
-  mutate(cows_per_person = cows/n_farm, pct_enrolled = enrolled/pop, pct_illiterate = illiterate/pop) %>%
+  mutate(cows_per_person = cows/n_farm, pct_enrolled = enrolled/pop*100, pct_illiterate = illiterate/pop*100) %>%
   select(STATEA, COUNTYA, GISJOIN, YEAR, STATE, COUNTY, value_farm, value_implements, avg_size, n_farm, 
          acres_farms, acres_irrigated, pct_irrigated, cows, cows_per_person, horses, pop, male, female, 
          enrolled, pct_enrolled, urban_pop, pct_urban, illiterate, pct_illiterate)
@@ -129,7 +134,7 @@ data1890j <- full_join(data1890a, data1890b, by = c("STATEA", "COUNTYA")) %>%
          female = AV0002+AV0004+AV0006+AV0008, enrolled = AVK005+AVK006+AVK007+AVK008, urban_pop = AUU001, 
          pct_urban = AUU001/AUM001*100, illiterate = NA, acres_farms = AUJ001+AUJ002, 
          acres_irrigated = AT2001, pct_irrigated = AT2001/(AUJ001+AUJ002)*100) %>%
-  mutate(cows_per_person = cows/n_farm, pct_enrolled = enrolled/pop, pct_illiterate = illiterate/pop) %>%
+  mutate(cows_per_person = cows/n_farm, pct_enrolled = enrolled/pop*100, pct_illiterate = illiterate/pop*100) %>%
   select(STATEA, COUNTYA, GISJOIN, YEAR, STATE, COUNTY, value_farm, value_implements, avg_size, n_farm, 
          acres_farms, acres_irrigated, pct_irrigated, cows, cows_per_person, horses, pop, male, female, 
          enrolled, pct_enrolled, urban_pop, pct_urban, illiterate, pct_illiterate)
@@ -169,7 +174,7 @@ data1900j <- full_join(data1900a, data1900b, by = c("STATEA", "COUNTYA")) %>%
          avg_size = AXE001, value_implements = AWW003, pop = AWS001, male = AZ0001,female = AZ0001, 
          enrolled = NA, urban_pop = NA, pct_urban = NA, illiterate = AYS001+AYS002+AYS003+AYS004+AYS005, 
          acres_farms = AWT001, acres_irrigated = AX8001, pct_irrigated = AX8001/AWT001*100) %>%
-  mutate(cows_per_person = cows/n_farm, pct_enrolled = enrolled/pop, pct_illiterate = illiterate/pop) %>%
+  mutate(cows_per_person = cows/n_farm, pct_enrolled = enrolled/pop*100, pct_illiterate = illiterate/pop*100) %>%
   select(STATEA, COUNTYA, GISJOIN, YEAR, STATE, COUNTY, value_farm, value_implements, avg_size, n_farm, 
          acres_farms, acres_irrigated, pct_irrigated, cows, cows_per_person, horses, pop, male, female, 
          enrolled, pct_enrolled, urban_pop, pct_urban, illiterate, pct_illiterate)
@@ -190,7 +195,7 @@ data1910j <- full_join(data1910a, data1910b, by = c("STATEA", "COUNTYA")) %>%
          avg_size = A21001/A1H001, value_implements = A0Q005, pop = A0E001, male = NA, female = NA, 
          enrolled = A4F001, urban_pop = A36001, pct_urban = A36001/A0E001*100, illiterate = A38001, 
          acres_farms = A21001, acres_irrigated = A0G001, pct_irrigated = A0G001/A21001*100) %>%
-  mutate(cows_per_person = cows/n_farm, pct_enrolled = enrolled/pop, pct_illiterate = illiterate/pop) %>%
+  mutate(cows_per_person = cows/n_farm, pct_enrolled = enrolled/pop*100, pct_illiterate = illiterate/pop*100) %>%
   select(STATEA, COUNTYA, GISJOIN, YEAR, STATE, COUNTY, value_farm, value_implements, avg_size, n_farm, 
          acres_farms, acres_irrigated, pct_irrigated, cows, cows_per_person, horses, pop, male, female, 
          enrolled, pct_enrolled, urban_pop, pct_urban, illiterate, pct_illiterate)
@@ -218,7 +223,7 @@ data1920j <- data1920j %>%
          female = A8B002, enrolled = A7N001+A7N002+A7N003+A7N004, urban_pop = A80001, 
          pct_urban = A80001/A81001*100, illiterate = A7U001, acres_farms = AB3T001, 
          acres_irrigated = AB6L001, pct_irrigated = AB6L002/AB3T001*100) %>%
-  mutate(cows_per_person = cows/n_farm, pct_enrolled = enrolled/pop, pct_illiterate = illiterate/pop) %>%
+  mutate(cows_per_person = cows/n_farm, pct_enrolled = enrolled/pop*100, pct_illiterate = illiterate/pop*100) %>%
   select(STATEA, COUNTYA, GISJOIN, YEAR, STATE, COUNTY, value_farm, value_implements, avg_size, n_farm, 
          acres_farms, acres_irrigated, pct_irrigated, cows, cows_per_person, horses, pop, male, female, 
          enrolled, pct_enrolled, urban_pop, pct_urban, illiterate, pct_illiterate)
@@ -263,7 +268,7 @@ data1930j <- data1930j %>%
          female = BC3002, enrolled = BDT001+BDT002+BDT003+BDT004, urban_pop = BDX001, 
          pct_urban = BDX001/BDP001*100, illiterate = BDV001, acres_farms = AB98001, 
          acres_irrigated = ACEX002, pct_irrigated = ACEX002/AB98001*100) %>%
-  mutate(cows_per_person = cows/n_farm, pct_enrolled = enrolled/pop, pct_illiterate = illiterate/pop) %>%
+  mutate(cows_per_person = cows/n_farm, pct_enrolled = enrolled/pop*100, pct_illiterate = illiterate/pop*100) %>%
   select(STATEA, COUNTYA, GISJOIN, YEAR, STATE, COUNTY, value_farm, value_implements, avg_size, n_farm, 
          acres_farms, acres_irrigated, pct_irrigated, cows, cows_per_person, horses, pop, male, female, 
          enrolled, pct_enrolled, urban_pop, pct_urban, illiterate, pct_illiterate)
@@ -295,8 +300,8 @@ data1940j <- data1940j %>%
          female = BVY002, enrolled = BWU001+BWU002+BWU003+BWU004+BWU005, urban_pop = NA, 
          pct_urban = NA, illiterate = NA, acres_farms = BY3001, 
          acres_irrigated = NA, pct_irrigated = NA) %>%
-  mutate(cows_per_person = cows/n_farm, pct_enrolled = enrolled/pop, 
-         pct_illiterate = illiterate/pop) %>%
+  mutate(cows_per_person = cows/n_farm, pct_enrolled = enrolled/pop*100, 
+         pct_illiterate = illiterate/pop*100) %>%
   select(STATEA, COUNTYA, GISJOIN, YEAR, STATE, COUNTY, value_farm, value_implements, avg_size, n_farm, 
          acres_farms, acres_irrigated, pct_irrigated, cows, cows_per_person, horses, pop, male, female, 
          enrolled, pct_enrolled, urban_pop, pct_urban, illiterate, pct_illiterate)
@@ -323,7 +328,7 @@ data1950j <- full_join(data1950a, data1950b, by = c("STATEA", "COUNTYA")) %>%
          female = B3E002, enrolled = B2A001+B2A002+B2A003+B2A004+B2A005, urban_pop = B2J001, 
          pct_urban = B2J001/B18001*101, illiterate = NA, acres_farms = B3K001, 
          acres_irrigated = NA, pct_irrigated = NA) %>%
-  mutate(cows_per_person = cows/n_farm, pct_enrolled = enrolled/pop, pct_illiterate = illiterate/pop) %>%
+  mutate(cows_per_person = cows/n_farm, pct_enrolled = enrolled/pop*100, pct_illiterate = illiterate/pop*100) %>%
   select(STATEA, COUNTYA, GISJOIN, YEAR, STATE, COUNTY, value_farm, value_implements, avg_size, n_farm, 
          acres_farms, acres_irrigated, pct_irrigated, cows, cows_per_person, horses, pop, male, female, 
          enrolled, pct_enrolled, urban_pop, pct_urban, illiterate, pct_illiterate)
@@ -350,7 +355,7 @@ data1960j <- data1960j %>%
          avg_size = NA, value_implements = NA, pop = B47001, male = B5H001, 
          female = B5H002, enrolled = NA, urban_pop = NA, pct_urban = NA, illiterate = NA, 
          acres_farms = NA, acres_irrigated = NA, pct_irrigated = NA) %>%
-  mutate(cows_per_person = cows/n_farm, pct_enrolled = enrolled/pop, pct_illiterate = illiterate/pop) %>%
+  mutate(cows_per_person = cows/n_farm, pct_enrolled = enrolled/pop*100, pct_illiterate = illiterate/pop*100) %>%
   select(STATEA, COUNTYA, GISJOIN, YEAR, STATE, COUNTY, value_farm, value_implements, avg_size, n_farm, 
          acres_farms, acres_irrigated, pct_irrigated, cows, cows_per_person, horses, pop, male, female, 
          enrolled, pct_enrolled, urban_pop, pct_urban, illiterate, pct_illiterate)
@@ -472,10 +477,12 @@ dsn1960 <- "raw-data/nhgis0003_shape/nhgis0003_shapefile_tl2008_us_county_1960"
 ```
 
 ## Output
+### Final
+#### Change
 
-```{r genericGis}
-
-# df %>% filter(b == !!b)
+```{r gisTemplate}
+# might also want to add a filter for state??
+# if time permits...
 
 # gis template for any year/variable desired
 # only change these two lines!
@@ -534,7 +541,415 @@ leaflet(countyyear) %>%
 
 ```
 
+```{r experimentalModels}
 
+modelData <- allData %>%
+  mutate(YEAR = as.factor(YEAR)) %>%
+  filter(! is.na(pct_enrolled) & pct_enrolled > 0) %>%
+  group_by(YEAR)
+
+ggplot(modelData, aes(x = avg_value_implements, y = pct_enrolled, color = YEAR)) + 
+  geom_point(alpha = 0.1) +
+  geom_smooth(method = "lm", se = FALSE) +
+  ylim(0, 100) + 
+  labs(title = "Relationship Between Farm Value and Education, by County",
+       subtitle = "Midwestern United States", 
+       x = "Avergae Value of Farms", 
+       y = "Percent Population Enrolled in School") +
+  scale_x_log10(labels = comma) +
+  theme_classic()
+
+model1 <- modelData %>% 
+  filter(avg_value_farm > 0, avg_value_implements > 0, n_farm > 0) %>%
+  lm(data = ., pct_enrolled ~ avg_value_farm + pct_urban + n_farm) %>% 
+  tidy(conf.int = TRUE) %>% 
+  gt() %>% 
+  fmt_number(data = ., columns = c("estimate", "std.error", "statistic", "p.value", "conf.low", "conf.high"), decimals = 2)
+
+# avg_value_implements and cows_per_farm have an effect on enrollment
+# in general, for 1879 and 1890, more cows per farm = less enrollment
+# aka bigger farms = less enrollment?
+model2a <- modelData %>% 
+  filter(YEAR == "1870") %>%
+  lm(data = ., pct_enrolled ~ cows_per_farm) %>% 
+  tidy(conf.int = TRUE) %>% 
+  select(term, estimate, p.value, conf.low, conf.high) %>%
+  gt() %>% 
+  fmt_number(data = ., columns = c("estimate", "p.value", "conf.low", "conf.high"), 
+             decimals = 2)
+
+# modelData$YEAR <- fct_explicit_na(modelData$YEAR)
+
+model2b <- modelData %>% 
+  filter(! is.na(cows_per_farm)) %>%
+  lm(data = ., pct_enrolled ~ cows_per_farm) %>% 
+  tidy(conf.int = TRUE) %>% 
+  select(term, estimate, p.value, conf.low, conf.high) %>%
+  gt() %>% 
+  fmt_number(data = ., columns = c("estimate", "p.value", "conf.low", "conf.high"), 
+             decimals = 2)
+
+model2c <- modelData %>% 
+  filter(YEAR == "1910") %>%
+  lm(data = ., pct_enrolled ~ cows_per_farm) %>% 
+  tidy(conf.int = TRUE) %>% 
+  select(term, estimate, p.value, conf.low, conf.high) %>%
+  gt() %>% 
+  fmt_number(data = ., columns = c("estimate", "p.value", "conf.low", "conf.high"), 
+             decimals = 2)
+
+model2
+# cow plot
+# incorporate
+cowplot <- modelData %>% 
+  filter(YEAR == "1870" | YEAR == "1890" | YEAR == "1910") %>%
+  ggplot(aes(x = cows_per_farm, y = pct_enrolled, color = YEAR)) +
+  geom_point(alpha = 0.5) +
+  geom_smooth(method = "lm", se = FALSE) +
+  scale_x_log10(labels = comma) +
+  labs(title = "Cows and Education",
+       subtitle = "Relationship between the number of cows per farm\nand school enrollment, by county",
+       x = "Average Cows per Farm",
+       y = "Percent of Population Enrolled in School") +
+  theme_classic()
+
+modelData %>% 
+  filter(YEAR == "1870" | YEAR == "1890" | YEAR == "1910") %>%
+  ggplot(aes(x = cows_per_farm, y = pct_enrolled, color = YEAR)) +
+  geom_point() +
+  geom_smooth(se = FALSE)
+
+# Enrollment/Illiteracy model (just for testing)
+
+# This is saying that for every 1% increase in illiterate people, there is a 0.24% 
+# decrease in school enrollment, which makes sense
+model3 <- modelData %>%
+  lm(data = ., pct_enrolled ~ pct_illiterate) %>%
+  tidy(conf.int = TRUE) %>%
+  select(term, estimate, p.value, conf.low, conf.high) %>%
+  gt() %>%
+  fmt_number(data = ., columns = c("estimate", "p.value", "conf.low", "conf.high"), 
+             decimals = 2)
+
+mod3plot <- modelData %>%
+  filter(! is.na(pct_enrolled) & ! is.na(pct_illiterate)) %>%
+  ggplot(aes(pct_enrolled, pct_illiterate)) + 
+  geom_point() + 
+  geom_smooth(se = FALSE)
+```
+
+
+```{r moreModels}
+
+# can only use percentages until adjusting for inflation
+# OR deal with each year independently 
+
+# Set the NA values to 0
+# Not ideal, but necessary for running regressions
+allData[is.na(allData)] <- 0
+
+
+reg_years <- allData %>% 
+  # Get rid of the infinite cows_per_farm values
+  filter(! is.infinite(cows_per_farm)) %>%
+  group_by(YEAR) %>%
+  arrange(desc(YEAR)) %>%
+  
+  # Nest to create a tibble of tibbles
+  
+  nest() %>%
+  
+  # Call map inside of mutate to add new columns to the tibble
+  # reg_results are the results of the regression we ran in question 2
+  # coef is the coefficient of log_migrants for each continent
+  # upper and lower are the upper and lower bounds of the confidence interval created by tidy()
+  
+  # options
+  #STATEA, COUNTYA, GISJOIN, YEAR, STATE, COUNTY, value_farm, value_implements, avg_size, n_farm, 
+         # acres_farms, acres_irrigated, pct_irrigated, cows, cows_per_farm, horses, pop, male, female, 
+        # enrolled, pct_enrolled, urban_pop, pct_urban, illiterate, pct_illiterate
+
+mutate(mod = map(data, ~ lm(pct_enrolled ~ avg_size + avg_value_implements + n_farm + pct_irrigated + cows_per_farm + pct_urban, data = .)),
+         reg_results = map(mod, ~ tidy(., conf.int = TRUE)),
+         coef = map_dbl(reg_results, ~ filter(., term == "avg_size") %>% pull(estimate)),
+         upper = map_dbl(reg_results, ~ filter(., term == "avg_size") %>% pull(conf.high)),
+         lower = map_dbl(reg_results, ~ filter(., term == "avg_size") %>% pull(conf.low)),
+         coef = map_dbl(reg_results, ~ filter(., term == "avg_value_implements") %>% pull(estimate)),
+         upper = map_dbl(reg_results, ~ filter(., term == "avg_value_implements") %>% pull(conf.high)),
+         lower = map_dbl(reg_results, ~ filter(., term == "avg_value_implements") %>% pull(conf.low)),
+       coef = map_dbl(reg_results, ~ filter(., term == "n_farm") %>% pull(estimate)),
+         upper = map_dbl(reg_results, ~ filter(., term == "n_farm") %>% pull(conf.high)),
+         lower = map_dbl(reg_results, ~ filter(., term == "n_farm") %>% pull(conf.low)),
+       coef = map_dbl(reg_results, ~ filter(., term == "pct_irrigated") %>% pull(estimate)),
+         upper = map_dbl(reg_results, ~ filter(., term == "pct_irrigated") %>% pull(conf.high)),
+         lower = map_dbl(reg_results, ~ filter(., term == "pct_irrigated") %>% pull(conf.low)),
+       coef = map_dbl(reg_results, ~ filter(., term == "cows_per_farm") %>% pull(estimate)),
+         upper = map_dbl(reg_results, ~ filter(., term == "cows_per_farm") %>% pull(conf.high)),
+         lower = map_dbl(reg_results, ~ filter(., term == "cows_per_farm") %>% pull(conf.low)),
+       coef = map_dbl(reg_results, ~ filter(., term == "pct_urban") %>% pull(estimate)),
+         upper = map_dbl(reg_results, ~ filter(., term == "pct_urban") %>% pull(conf.high)),
+         lower = map_dbl(reg_results, ~ filter(., term == "pct_urban") %>% pull(conf.low))
+         )
+  
+# Now use the resulting tibble to create the gt table
+
+q4_gt <- q4 %>%
+  
+  # The original year column was giving me problems because it's a grouping variable
+  # Ungrouping solved the problem
+  
+  ungroup() %>%
+  
+  # Select the columns needed, as per the instructions
+  
+  select(year, coef, lower, upper) %>%
+  
+  gt() %>%
+  
+  # Add the desired titles, subtitles, and column labels
+  
+  tab_header(title = "Effect of Number of Migrants on Amount of Remittances by Year",
+             subtitle = "With 95% Confidence Interval") %>%
+  cols_label(year = "Year", coef = "Migrant Coefficient", 
+             lower = "Lower Bound", upper = "Upper Bound") %>%
+  
+  # Round all values to two decimal places
+  
+  fmt_number(columns = vars(coef, lower, upper), decimals = 2)
+
+```
+
+### SHINY FINAL
+```{r shiny, eval=FALSE}
+
+# PASTE DATA and LIBRARIES here after
+
+
+# Input
+
+ui <- fluidPage(
+    
+    # flatly is a nice theme to make the tabs look put together
+    
+    # Application title
+    
+    navbarPage("Agriculture and Education in the U.S.", theme = shinytheme("flatly"),
+               
+               # remember that tab panel is for what shows up in the tab, and title panel is 
+               # for what shows up at the top of the page within the tab                  
+               
+               tabPanel("Tab 1",
+                        
+                        # Give the page a title
+                        titlePanel("Relationship Between Farm Value and Education, by County"),
+                        
+                        # Generate a row with a sidebar
+                        sidebarLayout(      
+                            
+                            # Define the sidebar with one input
+                            # insteaad of region, I want year ######
+                            sidebarPanel(
+                                selectInput("year", "Year:", 
+                                            choices=c("1870" = "1870", "1890" = "1890", "1910" = "1910"), 
+                                            multiple = TRUE)),
+                            helpText("From Great Plains Population and Environment Survey Agricultural and Social & Demographic Data.")
+                        ),
+                        
+                        # Create a spot for the plot
+                        mainPanel(
+                            tabsetPanel(id = "tabsMain",
+                                        tabPanel("Plot",
+                                                 
+                                                 # this tells the UI what plot to put 
+                                                 
+                                                 plotOutput("agPlot")  
+                                        )))),
+               tabPanel("Models",
+                        
+                        # Give the page a title
+                        titlePanel("Relationship Between Farm Value and Education, by County"),
+                        p("Make some models! (See notes)"),
+                        gt_output("model1")
+               ),
+               tabPanel("Maps",
+                
+                # Give the page a title
+                titlePanel("Title Relating to Maps"),
+                p("Add a slider for different years/variables & figure out how to get two maps side by side"),
+                p("Maps may take up to 30 seconds to load."),
+               leafletOutput("map1"),
+               p()),
+               
+               tabPanel("About",
+                        
+                        # Give the page a title
+                        titlePanel("About this project"),
+                        p("My name is Julia Englebert. I am a senior at Harvard College studying Near Eastern Languages and Civilizations with a secondary field in Ethnicity, Migration, and Rights. Some of my academic interests include the history and future of Midwestern agriculture, and the role of data science in shaping social policy."),
+                        br(),
+                        p("This project uses historical census and American Community Survey (ACS) data to explore correlations between agriculture and education in the Midwestern United States. By joining the two datasets, the former containing agricultural data and the later containing demographic data, I was able to look at the impact of farming, land value, crop value, and more on education in Midwestern communities over the course of a century. 
+                        I chose this particular time range in part because of the data that was available to me, and in part due to the economic, industrial, and education policy changes that ocurred from 1870 to 1960. 
+                          My data is sourced from the IPUMS National Historical Geographic Information System (NHGIS) at nhgis.org. IPUMS provides census data from around the world, but my project focuses specifically on the United States from 1870 to 1960. All datasets and gis files used for this project can be downloaded from the NHGIS Data Finder:"),
+                        p(a(href="https://data2.nhgis.org/main", "NHGIS Data Finder")),
+                        br(),
+                        p("To see more of my work, please visit my Github account:"),
+                        p(a(href="https://github.com/julia-englebert", "Julia Englebert")),
+                        br(),
+                        titlePanel("Citations"),
+                        p("Steven Manson, Jonathan Schroeder, David Van Riper, and Steven Ruggles. IPUMS National Historical Geographic Information System: Version 14.0 [Database]. Minneapolis, MN: IPUMS. 2019. http://doi.org/10.18128/D050.V14.0"),
+                        p("The College of William and Mary and the Minnesota Population Center. School Attendance Boundary Information System (SABINS): Version 1.0. Minneapolis, MN: University of Minnesota 2011.")
+               )
+    ))
+
+
+
+# use plotly to allow hover text to appear on plots, giving more info about the point
+
+server <- function(input, output) {
+    
+    # Fill in the spot we created for a plot
+    output$agPlot <- renderPlot({
+        
+        # Render a plot
+        b_1870_1910 %>% 
+            filter(year %in% input$year) %>% 
+            group_by(year) %>%
+            ggplot(aes(x = value_farms, y = perc_school, color = year)) + 
+            geom_point(alpha = 0.5) + 
+            ylim(0, 100) + 
+            geom_smooth(method = "lm") + 
+            labs(title = "Relationship Between Farm Value and Education, by County", 
+                 subtitle = "Great Plains Region, United States", 
+                 x = "Total Dollar Value of Farms", 
+                 y = "Percent Students Ages 5-24 Enrolled in School") +
+            scale_x_log10(labels = comma) +
+            theme_classic()
+    })
+    
+    output$map1 <- renderLeaflet({
+            data1870 <- data1870j %>%
+                filter(STATE == "North Dakota" | STATE == "South Dakota" | STATE == "Nebraska" | STATE == "Minnesota" | STATE == "Iowa" | STATE == "Missouri" | STATE == "Wisconsin" | STATE == "Illinois" | STATE == "Kansas" | STATE == "Michigan" | STATE == "Indiana" | STATE == "Ohio", AJX001 > 0) %>%
+                mutate(valueAllFarmProds1870 = AJX001) %>%
+                select(GISJOIN, valueAllFarmProds1870)
+            
+            # Import Census Tract Shapefile into R as SpatialPolygonsDataFrameFormat (SP Dataframe)
+            # dsn is location of folder which contains shapefiles, (.proj, .shp etc.)
+            # layer is the filename of the .shp file inside the
+            # folder dsn points to. 
+            
+            county1870 <- sf::st_read(dsn = "raw-data/nhgis0002_shape/nhgis0002_shapefile_tl2008_us_county_1870",
+                                      layer = "US_county_1870_conflated")
+            
+            county1870 <-
+                county1870 %>%
+                merge(data1870, "GISJOIN")
+            
+            
+            # Set projection of tracts dataset to `projection` required by leaflet
+            
+            county1870 <- sf::st_transform(county1870, crs="+init=epsg:4326")
+            
+            # Condense size of data for faster processing
+            
+            county1870 <- rmapshaper::ms_simplify(county1870)
+            
+            # Set palette color
+            
+            pal <- colorNumeric("viridis", NULL)
+            
+            #  Plot the data
+            
+            leaflet(county1870) %>%
+                addTiles() %>%
+                addPolygons(stroke = FALSE, smoothFactor = 0.3, fillOpacity = 1,
+                            fillColor = ~pal(valueAllFarmProds1870)) %>%
+                addLegend(pal = pal, values = ~valueAllFarmProds1870, opacity = 1.0, title = "1870 Value of All Farm Productions,\nby Dollar")
+    })
+    
+    output$model1 <- render_gt({
+        
+        # experimental model
+        
+        model1
+        
+    })
+}
+
+
+
+# Run the application 
+
+shinyApp(ui = ui, server = server)
+```
+
+# DO NOT MAKE CHANGES BELOW THIS LINE
+
+### Map Code
+
+```{r genericGis}
+
+# DO NOT CHANGE THIS
+
+# might also want to add a filter for state??
+# if time permits...
+
+# gis template for any year/variable desired
+# only change these two lines!
+year <- 1870
+myvar <- "Average Farm Value"
+
+datayear <- mwData %>%
+  # use get() to use the stored variable
+  # idk why, but it doesn't work without this
+  # the variable must be converted to a double in the original mwData dataset
+  mutate(myvariable = (get(myvar))) %>%
+  filter(YEAR == year, myvariable > 0) %>%
+  select(GISJOIN, myvariable)
+
+# Import Census Tract Shapefile into R as SpatialPolygonsDataFrameFormat (SP Dataframe)
+# dsn is location of folder which contains shapefiles, (.proj, .shp etc.)
+# layer is the filename of the .shp file inside the
+# folder dsn points to. 
+
+dsnyear <- shapefiles %>% 
+  filter(Year == year) %>% 
+  pull(Dsn)
+layeryear <- shapefiles %>% 
+  filter(Year == year) %>% 
+  pull(Layer)
+
+countyyear <- sf::st_read(dsn = dsnyear,
+                         layer = layeryear)
+
+countyyear <-
+  countyyear %>%
+  merge(datayear, "GISJOIN")
+
+
+# Set projection of tracts dataset to `projection` required by leaflet
+
+countyyear <- sf::st_transform(countyyear, crs="+init=epsg:4326")
+
+# Condense size of data for faster processing
+
+countyyear <- rmapshaper::ms_simplify(countyyear)
+
+# Set palette color
+
+pal <- colorNumeric("viridis", NULL)
+
+#  Plot the data
+
+# use shiny to add a title, which will be be equivalent to myvar
+
+leaflet(countyyear) %>%
+  addTiles() %>%
+  addPolygons(stroke = FALSE, smoothFactor = 0.3, fillOpacity = 1,
+              fillColor = ~pal(myvariable)) %>%
+  addLegend(pal = pal, values = ~myvariable, opacity = 1.0, title = myvar)
+
+```
+
+# Save This
 ```{r shiny, eval=FALSE}
 
 # Pasting this here in case my computer explodes
