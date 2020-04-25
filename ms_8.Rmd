@@ -22,6 +22,7 @@ library(shinythemes)
 library(plotly)
 library(leaflet)
 library(broom)
+library(readxl)
 
 # packages for mapping
 library(leaflet)
@@ -37,7 +38,7 @@ library(sf)
 
 # DATA WRANGLING
 
-```{r allData}
+```{r allData, cache=TRUE}
 # 1800s data
 
 # Will comment on 1870s data, then repeat the process for all subsequent years
@@ -324,7 +325,7 @@ data1950j <- full_join(data1950a, data1950b, by = c("STATEA", "COUNTYA")) %>%
   # This variable only includings buildings and land
   
   mutate(value_farm = B3M001, n_farm = B3Z001, cows = NA, horses = NA, 
-         avg_size = B3L001, value_implements = NA, pop = B18001, male = B3E001, 
+         avg_size = B3L001, value_implements = NA, pop = B13001, male = B3E001, 
          female = B3E002, enrolled = B2A001+B2A002+B2A003+B2A004+B2A005, urban_pop = B2J001, 
          pct_urban = B2J001/B18001*101, illiterate = NA, acres_farms = B3K001, 
          acres_irrigated = NA, pct_irrigated = NA) %>%
@@ -364,7 +365,7 @@ data1960j <- data1960j %>%
 
 ## Join the cleaned sets
 
-```{r boundData}
+```{r boundData, cache=TRUE}
 # Running this code (before I renamed variables) showed that all .x values are the same as all .y values, 
 # so it was safe to eliminate the double columns
 # as long as problems returned 0 (and it did!)
@@ -383,9 +384,9 @@ data1960j <- data1960j %>%
 # Add pct_male and avg_value_farm variables
 # Filter for only midwestern states/territories
 
-allData <- as_tibble(bind_rows(data1870j, data1880j, data1890j, 
+allData_inflated <- as_tibble(bind_rows(data1870j, data1880j, data1890j, 
                        data1900j, data1910j, data1920j, data1930j, data1940j, data1950j, data1960j)) %>%
-  mutate(pct_male = male/pop, avg_value_farm = value_farm/n_farm, cows_per_farm = cows_per_person, 
+  mutate(pct_male = male/pop*100, avg_value_farm = value_farm/n_farm, cows_per_farm = cows_per_person, 
          avg_value_implements = value_implements/n_farm) %>%
   
   # I mislabeled cows_per_farm as cows_per_person, so I'm doing damage control now
@@ -394,9 +395,48 @@ allData <- as_tibble(bind_rows(data1870j, data1880j, data1890j,
   filter(STATE == "North Dakota" | STATE == "South Dakota" | STATE == "Dakota Territory" | 
            STATE == "Nebraska" | STATE == "Minnesota" | STATE == "Iowa" | STATE == "Missouri" | 
            STATE == "Wisconsin" | STATE == "Illinois" | STATE == "Kansas" | STATE == "Michigan" | 
-           STATE == "Indiana" | STATE == "Ohio")
+           STATE == "Indiana" | STATE == "Ohio", 
+         
+         # Get rid of the weird infinite values in this column 
+         
+         ! is.infinite(cows_per_farm))
 
-# This will be used for mapping!
+# Now adjust everything for inflation
+# I made a spreadsheet based on this website: 
+# https://www.officialdata.org/us/inflation/1960?amount=1
+
+inflation <- read_excel("inflation.xlsx")
+
+clean_data <- left_join(allData_inflated, inflation, by = c("YEAR" = "year")) %>%
+  # Use the multiplier column to adjust for inflation
+  mutate(value_farm = value_farm*multiplier, value_implements = value_implements*multiplier) %>%
+  mutate(avg_value_farm = value_farm/n_farm, avg_value_implements = value_implements/n_farm) 
+
+# Now save as an RDS file to save on space
+
+saveRDS(clean_data, file = "final/my_data.rds")
+saveRDS(clean_data, file = "my_data.rds")
+
+
+```
+
+```{r mapDataset}
+
+# Now just read in the RDS file
+# This is all you need to copy into the shiny app
+
+allData <- readRDS(file = "my_data.rds")
+
+# this is workable data, where NA columns have been removed
+# There was too much variable variation & inconsistencies to draw conclusions from all years
+
+subData <- allData %>% 
+  filter(YEAR == "1870" | YEAR == "1890" | YEAR == "1910") %>%
+  select(-acres_irrigated, -pct_irrigated, -illiterate, -pct_illiterate, -male, -female, -pct_male)
+
+
+
+# This next bitwill be used for mapping only!
 # All relevant columns must be numeric in order to function properly
 # Renaming them also helps make the maps more easily interpretable
 # But it's not ideal for working with the data in other contexts, hence the separate set
@@ -489,6 +529,13 @@ dsn1960 <- "raw-data/nhgis0003_shape/nhgis0003_shapefile_tl2008_us_county_1960"
 year <- 1870
 myvar <- "Average Farm Value"
 
+#choices for myvar will be determined by: 
+appPlan <- allData %>%
+  filter(YEAR == "1870") %>%
+  select_if(~ !all(is.na(.))) %>%
+  select(-STATEA:-COUNTY) %>%
+  select(-multiplier)
+
 datayear <- mwData %>%
   # use get() to use the stored variable
   # idk why, but it doesn't work without this
@@ -542,29 +589,123 @@ leaflet(countyyear) %>%
 ```
 
 ```{r experimentalModels}
+# USE subData FOR ALL MODELS
+# EVERYTHING ELSE IS DUBIOUS
 
-modelData <- allData %>%
+# Incorporate
+# Value of implements functions as a stand in for mechanization
+impedu_plot <- allData %>%
   mutate(YEAR = as.factor(YEAR)) %>%
-  filter(! is.na(pct_enrolled) & pct_enrolled > 0) %>%
-  group_by(YEAR)
-
-ggplot(modelData, aes(x = avg_value_implements, y = pct_enrolled, color = YEAR)) + 
+  group_by(YEAR) %>%
+  select(YEAR, avg_value_implements, pct_enrolled) %>%
+  na.omit() %>%
+  ggplot(aes(x = avg_value_implements, y = pct_enrolled, color = YEAR)) + 
   geom_point(alpha = 0.1) +
   geom_smooth(method = "lm", se = FALSE) +
-  ylim(0, 100) + 
+  ylim(0, 45) + 
   labs(title = "Relationship Between Farm Value and Education, by County",
        subtitle = "Midwestern United States", 
-       x = "Avergae Value of Farms", 
+       x = "Average Value of Implements", 
        y = "Percent Population Enrolled in School") +
   scale_x_log10(labels = comma) +
   theme_classic()
 
-model1 <- modelData %>% 
-  filter(avg_value_farm > 0, avg_value_implements > 0, n_farm > 0) %>%
-  lm(data = ., pct_enrolled ~ avg_value_farm + pct_urban + n_farm) %>% 
-  tidy(conf.int = TRUE) %>% 
-  gt() %>% 
-  fmt_number(data = ., columns = c("estimate", "std.error", "statistic", "p.value", "conf.low", "conf.high"), decimals = 2)
+# Incorporate
+# States are gaining more implements each year
+imp_plot <- allData %>%
+  mutate(YEAR = as.factor(YEAR)) %>%
+  select(YEAR, STATE, value_implements) %>%
+  na.omit() %>%
+  group_by(YEAR, STATE) %>%
+  summarize(mean_imp = mean(value_implements)) %>% 
+  ungroup() %>%
+  group_by(STATE) %>%
+  ggplot(aes(x = YEAR, y = mean_imp, fill = STATE)) + 
+  geom_col() +
+  labs(title = "Implement Value by Year, by State",
+       subtitle = "Dollar Values Adjusted for Inflation",
+       x = "Year",
+       y = "Average Value of All Implements",
+       fill = "State") +
+  theme_classic()
+
+
+# INCORPORATE
+# having more farms and being male leads to lower school enrollment
+# supports my hypothesis of farm work affecting enrollment, since males might be expected to due more manual labor
+maleedu_model <- allData %>%
+  select(YEAR, pct_enrolled, n_farm, pct_male) %>%
+  na.omit() %>%
+  group_by(YEAR) %>%
+  nest() %>%
+
+  # Call map inside of mutate to add new columns to the tibble
+  # upper and lower are the upper and lower bounds of the confidence interval created by tidy()
+  
+  # options
+  #STATEA, COUNTYA, GISJOIN, YEAR, STATE, COUNTY, value_farm, value_implements, avg_size, n_farm, 
+         # acres_farms, acres_irrigated, pct_irrigated, cows, cows_per_farm, horses, pop, male, female, 
+        # enrolled, pct_enrolled, urban_pop, pct_urban, illiterate, pct_illiterate
+
+  mutate(mod = map(data, ~ lm(pct_enrolled ~ n_farm*pct_male, data = .)),
+         reg_results = map(mod, ~ tidy(., conf.int = TRUE)),
+         n_farm_coef = map_dbl(reg_results, ~ filter(., term == "n_farm") %>% 
+                                   pull(estimate)),
+         n_farm_upper = map_dbl(reg_results, ~ filter(., term == "n_farm") %>% 
+                                    pull(conf.high)),
+         n_farm_lower = map_dbl(reg_results, ~ filter(., term == "n_farm") %>% 
+                                    pull(conf.low)),
+         pct_male_coef = map_dbl(reg_results, ~ filter(., term == "pct_male") %>% 
+                                   pull(estimate)),
+         pct_male_upper = map_dbl(reg_results, ~ filter(., term == "pct_male") %>% 
+                                    pull(conf.high)),
+         pct_male_lower = map_dbl(reg_results, ~ filter(., term == "pct_male") %>% 
+                                    pull(conf.low)),
+         interaction_coef = map_dbl(reg_results, ~ filter(., term == "n_farm:pct_male") %>% 
+                                   pull(estimate)),
+         interaction_upper = map_dbl(reg_results, ~ filter(., term == "n_farm:pct_male") %>% 
+                                    pull(conf.high)),
+         interaction_lower = map_dbl(reg_results, ~ filter(., term == "n_farm:pct_male") %>% 
+                                    pull(conf.low))
+         )
+# Incorporate
+maleedu_gt <- maleedu_model %>%
+  ungroup() %>%
+  
+  # Select the columns needed, as per the instructions
+  
+  select(-data:-reg_results) %>%
+  
+  gt() %>%
+  
+  # Add the desired titles, subtitles, and column labels
+  
+  tab_header(title = "Effect of Gender and Number of Farms on Enrollment",
+             subtitle = "With 95% Confidence Interval") %>%
+  tab_spanner(label = "Farm Coefficients", columns = vars(n_farm_lower, n_farm_coef, n_farm_upper)) %>%
+  tab_spanner(label = "Percent Male Coefficients", columns = vars(pct_male_lower, pct_male_coef,pct_male_upper)) %>%
+  tab_spanner(label = "Interaction Coefficients", columns = vars(interaction_lower, interaction_coef, interaction_upper)) %>%
+  cols_label(YEAR = "Year", n_farm_coef	= "Estimate", n_farm_upper = "Upper", n_farm_lower = "Lower", pct_male_coef = "Estimate", pct_male_upper = "Upper", pct_male_lower = "Lower",	interaction_coef = "Estimate", interaction_upper = "Upper", interaction_lower = "Lower") %>%
+  # Round all values to two decimal places
+  
+  fmt_number(columns = vars(n_farm_lower, n_farm_coef, n_farm_upper, pct_male_lower, pct_male_coef,pct_male_upper, interaction_lower, interaction_coef, interaction_upper), decimals = 4)
+
+# INCORPORATE
+# Effect of gender on enrollment dwindles over time
+maleedu_plot <- maleedu_model %>%
+  ungroup() %>%
+  select(YEAR, pct_male_coef, pct_male_upper, pct_male_lower) %>%
+  mutate(YEAR = as.factor(YEAR)) %>%
+  group_by(YEAR) %>%
+  ggplot(aes(x = YEAR, y = pct_male_coef)) + 
+  geom_errorbar(ymin = maleedu_model$pct_male_lower, ymax = maleedu_model$pct_male_upper) + 
+  geom_point() +
+  theme_classic() +
+  ylim(-1.5, 0.5) + 
+  labs(x = "Year",
+       y = "Coefficient",
+       title = "Percent Male Coefficients Over Time",
+       subtitle = "Measuring the effect of being male on school enrollment")
 
 # avg_value_implements and cows_per_farm have an effect on enrollment
 # in general, for 1879 and 1890, more cows per farm = less enrollment
@@ -578,10 +719,10 @@ model2a <- modelData %>%
   fmt_number(data = ., columns = c("estimate", "p.value", "conf.low", "conf.high"), 
              decimals = 2)
 
-# modelData$YEAR <- fct_explicit_na(modelData$YEAR)
-
-model2b <- modelData %>% 
-  filter(! is.na(cows_per_farm)) %>%
+# there was an infinite value left in the cows_per_farm column for this year
+# not sure why, but I got rid of it
+model2a <- modelData %>% 
+  filter(YEAR == "1890", !is.infinite(cows_per_farm)) %>%
   lm(data = ., pct_enrolled ~ cows_per_farm) %>% 
   tidy(conf.int = TRUE) %>% 
   select(term, estimate, p.value, conf.low, conf.high) %>%
@@ -644,20 +785,19 @@ mod3plot <- modelData %>%
 # can only use percentages until adjusting for inflation
 # OR deal with each year independently 
 
-# Set the NA values to 0
+# Set the NA values to almost zero
 # Not ideal, but necessary for running regressions
-allData[is.na(allData)] <- 0
-
+# setting to zero returns NaNs
 
 reg_years <- allData %>% 
+  # sample the data to run faster
+  # change this later
+  sample_n(size = 5000) %>%
   # Get rid of the infinite cows_per_farm values
-  filter(! is.infinite(cows_per_farm)) %>%
+  filter(! (is.na(pct_enrolled) & is.na(avg_size))) %>%
   group_by(YEAR) %>%
-  arrange(desc(YEAR)) %>%
-  
-  # Nest to create a tibble of tibbles
-  
-  nest() %>%
+  arrange(desc(YEAR)) %>% 
+  nest() 
   
   # Call map inside of mutate to add new columns to the tibble
   # reg_results are the results of the regression we ran in question 2
@@ -668,28 +808,34 @@ reg_years <- allData %>%
   #STATEA, COUNTYA, GISJOIN, YEAR, STATE, COUNTY, value_farm, value_implements, avg_size, n_farm, 
          # acres_farms, acres_irrigated, pct_irrigated, cows, cows_per_farm, horses, pop, male, female, 
         # enrolled, pct_enrolled, urban_pop, pct_urban, illiterate, pct_illiterate
-
-mutate(mod = map(data, ~ lm(pct_enrolled ~ avg_size + avg_value_implements + n_farm + pct_irrigated + cows_per_farm + pct_urban, data = .)),
+reg_years1 <- reg_years %>%
+  mutate(mod = map(data, ~ lm(pct_enrolled ~ avg_size + avg_value_implements + n_farm + pct_irrigated + cows_per_farm + pct_urban, data = .)),
          reg_results = map(mod, ~ tidy(., conf.int = TRUE)),
-         coef = map_dbl(reg_results, ~ filter(., term == "avg_size") %>% pull(estimate)),
-         upper = map_dbl(reg_results, ~ filter(., term == "avg_size") %>% pull(conf.high)),
-         lower = map_dbl(reg_results, ~ filter(., term == "avg_size") %>% pull(conf.low)),
-         coef = map_dbl(reg_results, ~ filter(., term == "avg_value_implements") %>% pull(estimate)),
-         upper = map_dbl(reg_results, ~ filter(., term == "avg_value_implements") %>% pull(conf.high)),
-         lower = map_dbl(reg_results, ~ filter(., term == "avg_value_implements") %>% pull(conf.low)),
-       coef = map_dbl(reg_results, ~ filter(., term == "n_farm") %>% pull(estimate)),
-         upper = map_dbl(reg_results, ~ filter(., term == "n_farm") %>% pull(conf.high)),
-         lower = map_dbl(reg_results, ~ filter(., term == "n_farm") %>% pull(conf.low)),
-       coef = map_dbl(reg_results, ~ filter(., term == "pct_irrigated") %>% pull(estimate)),
-         upper = map_dbl(reg_results, ~ filter(., term == "pct_irrigated") %>% pull(conf.high)),
-         lower = map_dbl(reg_results, ~ filter(., term == "pct_irrigated") %>% pull(conf.low)),
-       coef = map_dbl(reg_results, ~ filter(., term == "cows_per_farm") %>% pull(estimate)),
-         upper = map_dbl(reg_results, ~ filter(., term == "cows_per_farm") %>% pull(conf.high)),
-         lower = map_dbl(reg_results, ~ filter(., term == "cows_per_farm") %>% pull(conf.low)),
-       coef = map_dbl(reg_results, ~ filter(., term == "pct_urban") %>% pull(estimate)),
-         upper = map_dbl(reg_results, ~ filter(., term == "pct_urban") %>% pull(conf.high)),
-         lower = map_dbl(reg_results, ~ filter(., term == "pct_urban") %>% pull(conf.low))
-         )
+         avg_size_coef = map_dbl(reg_results, ~ filter(., term == "avg_size") %>% 
+                                   pull(estimate)),
+         avg_size_upper = map_dbl(reg_results, ~ filter(., term == "avg_size") %>% 
+                                    pull(conf.high)),
+         avg_size_lower = map_dbl(reg_results, ~ filter(., term == "avg_size") %>% 
+                                    pull(conf.low)),
+         avg_value_implements_coef = map_dbl(reg_results, ~ filter(., term == "avg_value_implements") %>% 
+                                               pull(estimate)),
+         avg_value_implements_upper = map_dbl(reg_results, ~ filter(., term == "avg_value_implements") %>% 
+                                                pull(conf.high)),
+         avg_value_implements_lower = map_dbl(reg_results, ~ filter(., term == "avg_value_implements") %>% 
+                                                pull(conf.low)),
+         n_farm_coef = map_dbl(reg_results, ~ filter(., term == "n_farm") %>% pull(estimate)),
+         n_farm_upper = map_dbl(reg_results, ~ filter(., term == "n_farm") %>% pull(conf.high)),
+         n_farm_lower = map_dbl(reg_results, ~ filter(., term == "n_farm") %>% pull(conf.low)),
+         pct_irrigated_coef = map_dbl(reg_results, ~ filter(., term == "pct_irrigated") %>% pull(estimate)),
+         pct_irrigated_upper = map_dbl(reg_results, ~ filter(., term == "pct_irrigated") %>% pull(conf.high)),
+         pct_irrigated_lower = map_dbl(reg_results, ~ filter(., term == "pct_irrigated") %>% pull(conf.low)),
+         cows_per_farm_coef = map_dbl(reg_results, ~ filter(., term == "cows_per_farm") %>% pull(estimate)),
+         cows_per_farm_upper = map_dbl(reg_results, ~ filter(., term == "cows_per_farm") %>% pull(conf.high)),
+         cows_per_farm_lower = map_dbl(reg_results, ~ filter(., term == "cows_per_farm") %>% pull(conf.low)),
+         pct_urban_coef = map_dbl(reg_results, ~ filter(., term == "pct_urban") %>% pull(estimate)),
+         pct_urban_upper = map_dbl(reg_results, ~ filter(., term == "pct_urban") %>% pull(conf.high)),
+         pct_urban_lower = map_dbl(reg_results, ~ filter(., term == "pct_urban") %>% pull(conf.low))
+  )
   
 # Now use the resulting tibble to create the gt table
 
@@ -702,15 +848,15 @@ q4_gt <- q4 %>%
   
   # Select the columns needed, as per the instructions
   
-  select(year, coef, lower, upper) %>%
+  select(YEAR, coef, lower, upper) %>%
   
   gt() %>%
   
   # Add the desired titles, subtitles, and column labels
   
-  tab_header(title = "Effect of Number of Migrants on Amount of Remittances by Year",
+  tab_header(title = "Title",
              subtitle = "With 95% Confidence Interval") %>%
-  cols_label(year = "Year", coef = "Migrant Coefficient", 
+  cols_label(YEAR = "Year", coef = "Migrant Coefficient", 
              lower = "Lower Bound", upper = "Upper Bound") %>%
   
   # Round all values to two decimal places
