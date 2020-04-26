@@ -24,6 +24,7 @@ library(broom)
 library(patchwork)
 library(magick)
 library(giphyr)
+library(gridExtra)
 
 
 # packages for mapping
@@ -34,6 +35,10 @@ library(sf)
 
 
 # READ IN THE DATA
+
+# Read in the model for gt and plot
+
+maleedu_model <- readRDS("maleedu_model.rds") 
 
 # Read in the shapefiles
 
@@ -135,7 +140,7 @@ ui <- fluidPage(
                                                  mainPanel(
                                                      imageOutput("plot2")
                                                  ))
-                                        ))),
+                            ))),
                
                
                tabPanel("Models",
@@ -143,12 +148,12 @@ ui <- fluidPage(
                         # Give the page a title
                         titlePanel("Agriculture and Education, by County"),
                         
-                         
+                        
                         # Create a spot for the plot
-                        mainPanel(
+                        mainPanel("",
                             tabsetPanel(id = "tabsMain",
                                         
-                                        tabPanel("Implements",
+                                        tabPanel("Implements and Education",
                                                  # Generate a row with a sidebar
                                                  sidebarLayout(      
                                                      
@@ -163,7 +168,7 @@ ui <- fluidPage(
                                                  )
                                         ),
                                         
-                                        tabPanel("Cattle",
+                                        tabPanel("Cattle and Education",
                                                  # Generate a row with a sidebar
                                                  sidebarLayout(      
                                                      
@@ -183,62 +188,55 @@ ui <- fluidPage(
                                                  p("Number of cows might be seen as a stand in for farm size. Is it?")
                                         ),
                                         
-                                        tabPanel("Gender",
-                                                 # Generate a row with a sidebar
-                                                 sidebarLayout(      
-                                                     
-                                                     # Define the sidebar with one input
-                                                     # comprehensive options:
-                                                     # c("1870" = "1870", "1880" = "1880", "1890" = "1890", "1900" = "1900","1910" = "1910", "1920" = "1920", "1930" = "1930", "1940" = "1940", "1950" = "1950", "1960" = "1960")
-                                                     sidebarPanel(
-                                                         selectInput("Year", "Year:", 
-                                                                     choices=c("1870" = "1870", "1890" = "1890", "1910" = "1910"), 
-                                                                     multiple = TRUE)),
-                                                     helpText("*Enter help text*")
-                                                 )
-                                        )
+                                        tabPanel("Gender and Education",
+                                                 
+                                                 mainPanel("main panel",
+                                                           gt_output("maleedu_gt"))
+                                                 
                                         )
                             )
-                        ),
-               
-               
-               tabPanel("Maps",
-                        titlePanel("Midwest Map Explorer"),
-                        p("For best results, view in fullscreen mode."),
-                        p("Maps may take up to 30 seconds to load...but they're worth it!"),
-                        sidebarLayout(
-                            
-                            sidebarPanel(
-                                uiOutput("choose_dataset"),
-                                uiOutput("choose_columns"),
-                                uiOutput("choose_columns2"),
-                                br(),
-                            ),
-                            mainPanel(leafletOutput("map1"),
-                                      leafletOutput("map2"))
-                        )),
-               
-               tabPanel("About",
-                        
-                        # Give the page a title
-                        titlePanel("About this project"),
-                        p("My name is Julia Englebert. I am a senior at Harvard College studying Near Eastern Languages and Civilizations with a secondary field in Ethnicity, Migration, and Rights. Some of my academic interests include the history and future of Midwestern agriculture, and the role of data science in shaping social policy."),
-                        br(),
-                        p("This project uses historical census and American Community Survey (ACS) data to explore correlations between agriculture and education in the Midwestern United States. By joining the two datasets, the former containing agricultural data and the later containing demographic data, I was able to look at the impact of farming, land value, crop value, and more on education in Midwestern communities over the course of a century. I chose this particular time range in part because of the data that was available to me, and in part due to the economic, industrial, and education policy changes that ocurred from 1870 to 1960. My data is sourced from the IPUMS National Historical Geographic Information System (NHGIS) at nhgis.org. IPUMS provides census data from around the world, but my project focuses specifically on the United States from 1870 to 1960. All datasets and gis files used for this project can be downloaded from the NHGIS Data Finder:"),
-                        p(a(href="https://data2.nhgis.org/main", "NHGIS Data Finder")),
-                        br(),
-                        p("To see more of my work, please visit my Github account:"),
-                        p(a(href="https://github.com/julia-englebert", "Julia Englebert")),
-                        br(),
-                        titlePanel("Citations"),
-                        p("Steven Manson, Jonathan Schroeder, David Van Riper, and Steven Ruggles. IPUMS National Historical Geographic Information System: Version 14.0 [Database]. Minneapolis, MN: IPUMS. 2019. http://doi.org/10.18128/D050.V14.0"),
-                        p("The College of William and Mary and the Minnesota Population Center. School Attendance Boundary Information System (SABINS): Version 1.0. Minneapolis, MN: University of Minnesota 2011.")
+
+                        )
                ),
-               
-               tabPanel("Codebook",
-                        titlePanel("How were variables measured for this project?"),
-                        p("Put some info here. An interactive gt table would be nice if you have time."))
-    )
+    
+    
+    tabPanel("Maps",
+             titlePanel("Midwest Map Explorer"),
+             p("For best results, view in fullscreen mode."),
+             p("Maps may take up to 30 seconds to load...but they're worth it!"),
+             sidebarLayout(
+                 
+                 sidebarPanel(
+                     uiOutput("choose_dataset"),
+                     uiOutput("choose_columns"),
+                     uiOutput("choose_columns2"),
+                     br(),
+                 ),
+                 mainPanel(leafletOutput("map1"),
+                           leafletOutput("map2"))
+             )),
+    
+    tabPanel("About",
+             
+             # Give the page a title
+             titlePanel("About this project"),
+             p("My name is Julia Englebert. I am a senior at Harvard College studying Near Eastern Languages and Civilizations with a secondary field in Ethnicity, Migration, and Rights. Some of my academic interests include the history and future of Midwestern agriculture, and the role of data science in shaping social policy."),
+             br(),
+             p("This project uses historical census and American Community Survey (ACS) data to explore correlations between agriculture and education in the Midwestern United States. By joining the two datasets, the former containing agricultural data and the later containing demographic data, I was able to look at the impact of farming, land value, crop value, and more on education in Midwestern communities over the course of a century. I chose this particular time range in part because of the data that was available to me, and in part due to the economic, industrial, and education policy changes that ocurred from 1870 to 1960. My data is sourced from the IPUMS National Historical Geographic Information System (NHGIS) at nhgis.org. IPUMS provides census data from around the world, but my project focuses specifically on the United States from 1870 to 1960. All datasets and gis files used for this project can be downloaded from the NHGIS Data Finder:"),
+             p(a(href="https://data2.nhgis.org/main", "NHGIS Data Finder")),
+             br(),
+             p("To see more of my work, please visit my Github account:"),
+             p(a(href="https://github.com/julia-englebert", "Julia Englebert")),
+             br(),
+             titlePanel("Citations"),
+             p("Steven Manson, Jonathan Schroeder, David Van Riper, and Steven Ruggles. IPUMS National Historical Geographic Information System: Version 14.0 [Database]. Minneapolis, MN: IPUMS. 2019. http://doi.org/10.18128/D050.V14.0"),
+             p("The College of William and Mary and the Minnesota Population Center. School Attendance Boundary Information System (SABINS): Version 1.0. Minneapolis, MN: University of Minnesota 2011.")
+    ),
+    
+    tabPanel("Codebook",
+             titlePanel("How were variables measured for this project?"),
+             p("Put some info here. An interactive gt table would be nice if you have time."))
+)
 )
 
 
@@ -285,6 +283,35 @@ server <- (function(input, output, session) {
                  y = "Percent of Population Enrolled in School") +
             theme_classic()
     })
+    
+    # maleedu plot and gt
+    
+    output$maleedu_gt <- render_gt({
+        maleedu_model%>%
+            ungroup() %>%
+            
+            # Select the columns needed, as per the instructions
+            
+            select(-data:-reg_results) %>%
+            
+            gt() %>%
+            
+            # Add the desired titles, subtitles, and column labels
+            
+            tab_header(title = "Effect of Gender and Number of Farms on Enrollment",
+                       subtitle = "With 95% Confidence Interval") %>%
+            tab_spanner(label = "Farm Coefficients", columns = vars(n_farm_lower, n_farm_coef, n_farm_upper)) %>%
+            tab_spanner(label = "Percent Male Coefficients", columns = vars(pct_male_lower, pct_male_coef,pct_male_upper)) %>%
+            tab_spanner(label = "Interaction Coefficients", columns = vars(interaction_lower, interaction_coef, interaction_upper)) %>%
+            cols_label(YEAR = "Year", n_farm_coef	= "Estimate", n_farm_upper = "Upper", n_farm_lower = "Lower", pct_male_coef = "Estimate", pct_male_upper = "Upper", pct_male_lower = "Lower",	interaction_coef = "Estimate", interaction_upper = "Upper", interaction_lower = "Lower") %>%
+            # Round all values to two decimal places
+            
+            fmt_number(columns = vars(n_farm_lower, n_farm_coef, n_farm_upper, pct_male_lower, pct_male_coef,pct_male_upper, interaction_lower, interaction_coef, interaction_upper), decimals = 4)
+        
+    })
+    
+    
+    # Map output
     
     output$choose_dataset <- renderUI({
         selectInput("dataset", "Choose Census Year:", as.list(data_sets))
