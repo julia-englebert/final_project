@@ -147,7 +147,8 @@ ui <- fluidPage(
                         # Create a spot for the plot
                         mainPanel(
                             tabsetPanel(id = "tabsMain",
-                                        tabPanel("Cows and Education",
+                                        
+                                        tabPanel("Implements",
                                                  # Generate a row with a sidebar
                                                  sidebarLayout(      
                                                      
@@ -159,13 +160,46 @@ ui <- fluidPage(
                                                                      choices=c("1870" = "1870", "1890" = "1890", "1910" = "1910"), 
                                                                      multiple = TRUE)),
                                                      helpText("*Enter help text*")
+                                                 )
+                                        ),
+                                        
+                                        tabPanel("Cattle",
+                                                 # Generate a row with a sidebar
+                                                 sidebarLayout(      
+                                                     
+                                                     # Define the sidebar with one input
+                                                     # comprehensive options:
+                                                     # c("1870" = "1870", "1880" = "1880", "1890" = "1890", "1900" = "1900","1910" = "1910", "1920" = "1920", "1930" = "1930", "1940" = "1940", "1950" = "1950", "1960" = "1960")
+                                                     sidebarPanel(
+                                                         selectInput("cowYear", "Year:", 
+                                                                     choices=c("1870" = "1870", "1890" = "1890", "1910" = "1910"), 
+                                                                     multiple = TRUE)),
+                                                     helpText("*Enter help text*")
                                                  ),
                                                  
                                                  # this tells the UI what plot to put 
                                                  
                                                  plotOutput("agPlot"),
                                                  p("Number of cows might be seen as a stand in for farm size. Is it?")
-                                        )))),
+                                        ),
+                                        
+                                        tabPanel("Gender",
+                                                 # Generate a row with a sidebar
+                                                 sidebarLayout(      
+                                                     
+                                                     # Define the sidebar with one input
+                                                     # comprehensive options:
+                                                     # c("1870" = "1870", "1880" = "1880", "1890" = "1890", "1900" = "1900","1910" = "1910", "1920" = "1920", "1930" = "1930", "1940" = "1940", "1950" = "1950", "1960" = "1960")
+                                                     sidebarPanel(
+                                                         selectInput("Year", "Year:", 
+                                                                     choices=c("1870" = "1870", "1890" = "1890", "1910" = "1910"), 
+                                                                     multiple = TRUE)),
+                                                     helpText("*Enter help text*")
+                                                 )
+                                        )
+                                        )
+                            )
+                        ),
                
                
                tabPanel("Maps",
@@ -233,9 +267,12 @@ server <- (function(input, output, session) {
         
         # Render a plot
         allData %>%
-            filter(YEAR %in% input$Year) %>%
+            filter(YEAR %in% input$cowYear) %>%
             mutate(YEAR = as.factor(YEAR)) %>%
+            mutate(YEAR = fct_explicit_na(YEAR, na_level = NA)) %>%
             group_by(YEAR) %>%
+            select(YEAR, cows_per_farm, pct_enrolled) %>%
+            na.omit() %>%
             ggplot(aes(x = cows_per_farm, y = pct_enrolled, color = YEAR)) +
             geom_point(alpha = 0.1) +
             geom_smooth(method = "lm", se = FALSE) +
