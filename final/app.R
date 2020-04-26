@@ -175,7 +175,7 @@ ui <- fluidPage(
                                                  
                                                  # this tells the UI what plot to put 
                                                  
-                                                 plotOutput("agPlot")  
+                                                 plotOutput("agPlot")
                                         )))),
                tabPanel("Models",
                         
@@ -184,33 +184,23 @@ ui <- fluidPage(
                         p("Make some models! (See notes)"),
                         gt_output("model1")
                ),
-               
+         
                
                tabPanel("Maps",
                         titlePanel("Midwest Map Explorer"),
                         p("For best results, view in fullscreen mode."),
                         p("Maps may take up to 30 seconds to load...but they're worth it!"),
-                   mainPanel(
-                         tabsetPanel(id = "tabsMain",
-                                                     tabPanel("Map",
-                                                              pageWithSidebar(
+                                sidebarLayout(
                                                                   
-                                                                  headerPanel(""),
-                                                                  
-                                                                  sidebarPanel(
-                                                                      uiOutput("choose_dataset"),
-                                                                      
-                                                                      uiOutput("choose_columns"),
+                                      sidebarPanel(
+                                            uiOutput("choose_dataset"),
+                                            uiOutput("choose_columns"),
+                                            uiOutput("choose_columns2"),
                                                                       br(),
                                                                   ),
-                                         mainPanel(leafletOutput("map1"))
+                                         mainPanel(leafletOutput("map1"),
+                                                   leafletOutput("map2"))
                                      )),
-                                     tabPanel("Interesting Observations",
-                                              # Don't write in the first p()
-                                              # Looks bad
-                                              p(""),
-                                              p("Write some stuff!")))
-                                 )),
                
                tabPanel("About",
                         
@@ -354,6 +344,100 @@ server <- (function(input, output, session) {
             addLegend(pal = pal, values = ~myvariable, opacity = 1.0, title = myvar)
         
     })
+    
+    # map2 dropdown menu
+    output$choose_columns2 <- renderUI({
+        # If missing input, return to avoid error later in function
+        if(is.null(input$dataset))
+            return()
+        
+        # Get the data set with the appropriate name
+        dat <- get(input$dataset)
+        
+        # Get rid of "YEAR" and "STATE" so that users don't pick them and make senseless maps
+        
+        colnames1 <- names(dat)
+        colnames <- colnames1[!colnames1 %in% "YEAR" & !colnames1 %in% "STATE"]
+        
+        # Create the dropdown menu and select all columns by default
+        selectInput("columns2", "Choose Variable to Compare:", 
+                    choices  = colnames,
+                    selected = "")
+    })
+    
+    output$map2 <- renderLeaflet({
+        # If missing input, return to avoid error later in function
+        if(is.null(input$dataset))
+            return()
+        
+        # Get the data set
+        dat <- get(input$dataset)
+        
+        # Make sure columns are correct for data set (when data set changes, the
+        # columns will initially be for the previous data set)
+        if (is.null(input$columns2) || !(input$columns2 %in% names(dat)))
+            return()
+        
+        year <- dat %>% slice(1) %>% pull(YEAR)
+        
+        # Keep the selected columns
+        dat <- dat[, input$columns2, drop = FALSE]
+        
+        myvar <- input$columns2
+        
+        datayear <- mwData %>%
+            # use get() to use the stored variable
+            # idk why, but it doesn't work without this
+            # the variable must be converted to a double in the original mwData dataset
+            mutate(myvariable = (get(myvar))) %>%
+            filter(YEAR == year, myvariable > 0) %>%
+            select(GISJOIN, myvariable)
+        
+        # Import Census Tract Shapefile into R as SpatialPolygonsDataFrameFormat (SP Dataframe)
+        # dsn is location of folder which contains shapefiles, (.proj, .shp etc.)
+        # layer is the filename of the .shp file inside the
+        # folder dsn points to. 
+        
+        dsnyear <- shapefiles %>% 
+            filter(Year == year) %>% 
+            pull(Dsn)
+        layeryear <- shapefiles %>% 
+            filter(Year == year) %>% 
+            pull(Layer)
+        
+        countyyear <- sf::st_read(dsn = dsnyear,
+                                  layer = layeryear)
+        
+        countyyear <-
+            countyyear %>%
+            merge(datayear, "GISJOIN")
+        
+        
+        # Set projection of tracts dataset to `projection` required by leaflet
+        
+        countyyear <- sf::st_transform(countyyear, crs="+init=epsg:4326")
+        
+        # Condense size of data for faster processing
+        
+        countyyear <- rmapshaper::ms_simplify(countyyear)
+        
+        # Set palette color
+        
+        pal <- colorNumeric("viridis", NULL)
+        
+        #  Plot the data
+        
+        # use shiny to add a title, which will be be equivalent to myvar
+        
+        leaflet(countyyear) %>%
+            addTiles() %>%
+            addPolygons(stroke = FALSE, smoothFactor = 0.3, fillOpacity = 1,
+                        fillColor = ~pal(myvariable)) %>%
+            addLegend(pal = pal, values = ~myvariable, opacity = 1.0, title = myvar)
+        
+    })
+    
+   
     
     output$model1 <- render_gt({
         
