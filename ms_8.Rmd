@@ -32,11 +32,6 @@ library(rmapshaper)
 library(sf)
 ```
 
-```{r testModel}
-#
-# model1 <- lm(data = mwdata, perc_school ~ state + land_in_farms)
-```
-
 # DATA WRANGLING
 
 ```{r allData, cache=TRUE}
@@ -411,11 +406,12 @@ clean_data <- left_join(allData_inflated, inflation, by = c("YEAR" = "year")) %>
 
 saveRDS(clean_data, file = "final/my_data.rds")
 saveRDS(clean_data, file = "my_data.rds")
+saveRDS(clean_data, file = "testing123/my_data.rds")
 
 
 ```
 
-```{r mapDataset}
+```{r mapDataset, cache=TRUE}
 
 # Now just read in the RDS file
 # This is all you need to copy into the shiny app
@@ -471,13 +467,14 @@ mwData <- allData %>%
                    #"Percentage School Enrollment", "Urban Population", 
                    #"Percent of Population in Urban Areas", "Illiterate Population", "Illiteracy Rate")
 
+saveRDS(mwData, file = "final/mwData.rds")
   
 ```
 
 # Shiny 
 ## Preparation
 
-```{r shapefiles}
+```{r shapefiles, cache=TRUE}
 
 # Now save the gis data with short names for sake of the shiny app
 # hopefully this will work...
@@ -515,21 +512,22 @@ dsn1960 <- "raw-data/nhgis0003_shape/nhgis0003_shapefile_tl2008_us_county_1960"
 ### Final
 #### Change
 
-```{r gisTemplate}
+```{r gisTemplate, cache=TRUE}
 # might also want to add a filter for state??
 # if time permits...
 
 # gis template for any year/variable desired
 # only change these two lines!
-year <- 1870
-myvar <- "Average Farm Value"
+year <- 1950
 
 #choices for myvar will be determined by: 
-appPlan <- allData %>%
-  filter(YEAR == "1870") %>%
+appPlan <- mwData %>%
+  filter(YEAR == year) %>%
   select_if(~ !all(is.na(.))) %>%
-  select(-STATEA:-COUNTY) %>%
-  select(-multiplier)
+  select(-STATEA:-COUNTY)
+
+# myvar options will be determined by column names of appPlan & displayed via dropdown widget
+myvar <- "Irrigated Acres"
 
 datayear <- mwData %>%
   # use get() to use the stored variable
@@ -583,7 +581,7 @@ leaflet(countyyear) %>%
 
 ```
 
-```{r experimentalModels}
+```{r experimentalModels, eval = FALSE}
 
 # INCORPORATE ALL OF THESE IN SHINY
 
@@ -738,7 +736,7 @@ ggsave("final/cowedu_plot.png", plot = cowedu_plot)
 
 ```
 
-```{r farmTrends}
+```{r farmTrends, eval = FALSE}
 # this takes foever--cache it
 
 # INCORPORATE 
@@ -887,5 +885,32 @@ anim_save("final/plot4.gif", plot4)
 ```{r shiny, eval=FALSE}
 
 # Paste here after
+
+tabPanel("Maps",
+                                 
+                                 pageWithSidebar(
+                                     
+                                     headerPanel("Midwest Map Explorer"),
+                                     
+                                     sidebarPanel(
+                                         uiOutput("choose_dataset"),
+                                         
+                                         uiOutput("choose_columns"),
+                                         br(),
+                                         a(href = "https://gist.github.com/4211337", "Source code")
+                                     ),
+                                     
+                                     
+                                     mainPanel(
+                                         tabsetPanel(id = "tabsMain",
+                                                     tabPanel("Map",
+                                         leafletOutput("map1")
+                                     ),
+                                     tabPanel("Interesting Observations",
+                                              # Don't write in the first p()
+                                              # Looks bad
+                                              p(""),
+                                              p("Write some stuff!")))
+                                 ))),
 
 ```

@@ -132,9 +132,10 @@ Census_1960 <- x %>% filter(YEAR == "1960") %>%
 
 data_sets <- c("Census_1870", "Census_1880", "Census_1890", "Census_1900", "Census_1910", "Census_1920", "Census_1930", "Census_1940", "Census_1950", "Census_1960")
 
-ui <- fluidPage(pageWithSidebar(
+ui <- fluidPage(
+    pageWithSidebar(
     
-    headerPanel(""),
+    headerPanel("Midwest Map Explorer"),
     
     sidebarPanel(
         uiOutput("choose_dataset"),
@@ -154,7 +155,7 @@ server <- (function(input, output) {
     
     # Drop-down selection box for which data set
     output$choose_dataset <- renderUI({
-        selectInput("dataset", "Year", as.list(data_sets))
+        selectInput("dataset", "Choose Census Year:", as.list(data_sets))
     })
     
     # Check boxes
@@ -165,20 +166,19 @@ server <- (function(input, output) {
         
         # Get the data set with the appropriate name
         dat <- get(input$dataset)
-        # Make the first and second columns, "YEAR" and "STATE", null so that users don't pick them
-        # I can't just get rid of these columns altogether because I need them for my plots!
-        names(dat)[1] <- "NULL"
-        names(dat)[2] <- "NULL"
-        colnames <- names(dat)
         
-        # Create the checkboxes and select them all by default
-        selectInput("columns", "Choose columns", 
+        # Get rid of "YEAR" and "STATE" so that users don't pick them and make senseless maps
+
+        colnames1 <- names(dat)
+        colnames <- colnames1[!colnames1 %in% "YEAR" & !colnames1 %in% "STATE"]
+        
+        # Create the dropdown menu and select all columns by default
+        selectInput("columns", "Choose Variable:", 
                            choices  = colnames)
     })
     
  
-    
-    # My Output
+    # Map output
     output$map1 <- renderLeaflet({
         # If missing input, return to avoid error later in function
         if(is.null(input$dataset))
