@@ -7,6 +7,8 @@
 #    http://shiny.rstudio.com/
 #
 
+# LOAD THE REQUIRED PACKAGES
+
 library(shiny)
 library(haven)
 library(tidyverse)
@@ -19,6 +21,10 @@ library(shinythemes)
 library(plotly)
 library(leaflet)
 library(broom)
+library(patchwork)
+library(magick)
+library(giphyr)
+
 
 # packages for mapping
 library(leaflet)
@@ -27,66 +33,21 @@ library(rmapshaper)
 library(sf)
 
 
+# READ IN THE DATA
 
-# Prep the shapefiles
-# Now save the gis data with short names for sake of the shiny app
-# hopefully this will work...
+# Read in the shapefiles
 
-dsn1870 <- "raw-data/nhgis0002_shape/nhgis0002_shapefile_tl2008_us_county_1870"
-layer1870 <- "US_county_1870_conflated"
-dsn1880 <- "raw-data/nhgis0002_shape/nhgis0002_shapefile_tl2008_us_county_1880"
-layer1880 <- "US_county_1880_conflated"
-dsn1890 <- "raw-data/nhgis0002_shape/nhgis0002_shapefile_tl2008_us_county_1890"
-layer1890 <- "US_county_1890_conflated"
-dsn1900 <- "raw-data/nhgis0003_shape/nhgis0003_shapefile_tl2008_us_county_1900"
-layer1900 <- "US_county_1900_conflated"
-dsn1910 <- "raw-data/nhgis0003_shape/nhgis0003_shapefile_tl2008_us_county_1910"
-layer1910 <- "US_county_1910_conflated"
-dsn1920 <- "raw-data/nhgis0003_shape/nhgis0003_shapefile_tl2008_us_county_1920"
-layer1920 <- "US_county_1920_conflated"
-dsn1930 <- "raw-data/nhgis0003_shape/nhgis0003_shapefile_tl2008_us_county_1930"
-layer1930 <- "US_county_1930_conflated"
-dsn1940 <- "raw-data/nhgis0003_shape/nhgis0003_shapefile_tl2008_us_county_1940"
-layer1940 <- "US_county_1940_conflated"
-dsn1950 <- "raw-data/nhgis0003_shape/nhgis0003_shapefile_tl2008_us_county_1950"
-layer1950 <- "US_county_1950_conflated"
-dsn1960 <- "raw-data/nhgis0003_shape/nhgis0003_shapefile_tl2008_us_county_1960"
-layer1960 <- "US_county_1960_conflated"
+shapefiles <- readRDS(file = "shapefiles.rds")
 
-# Make a tibble of all the shapefiles that you'll need
-shapefiles <- tibble(Year = c(1870, 1880, 1890, 1900, 1910, 1920, 1930, 1940, 1950, 1960), 
-                     Dsn = c(dsn1870, dsn1880, dsn1890, dsn1900, dsn1910, dsn1920, dsn1930, 
-                             dsn1940, dsn1950, dsn1960),
-                     Layer = c(layer1870, layer1880, layer1890, layer1900, layer1910, layer1920, 
-                               layer1930, layer1940, layer1950, layer1960))
 
-x <- readRDS("my_data.rds") %>%
-    mutate("Value of Farms" = as.numeric(value_farm), "Average Farm Value" = as.numeric(avg_value_farm), 
-           "Value of Implements" = as.numeric(value_implements), 
-           "Average Implement Value" = as.numeric(avg_value_implements), 
-           "Average Farm Size" = as.numeric(avg_size), "Number of Farms" = as.numeric(n_farm), 
-           "Acres of Farmland" = as.numeric(acres_farms), "Irrigated Acres" = as.numeric(acres_irrigated), 
-           "Percentage of Farmland Irrigated" = as.numeric(pct_irrigated), "Number of Cows" = as.numeric(cows),
-           "Number of Cows per Farm" = as.numeric(cows_per_farm), "Number of Horses" = as.numeric(horses), 
-           "Total Population" = as.numeric(pop), "Male Population" = as.numeric(male), 
-           "Female Population" = as.numeric(female), "Male Percentage of Population" = as.numeric(pct_male),
-           "Total School Enrollment" = as.numeric(enrolled), 
-           "Percentage School Enrollment" = as.numeric(pct_enrolled), 
-           "Urban Population" = as.numeric(urban_pop), 
-           "Percent of Population in Urban Areas" = as.numeric(pct_urban), 
-           "Illiterate Population" = as.numeric(illiterate), 
-           "Illiteracy Rate" = as.numeric(pct_illiterate)) %>%
-    select(STATEA, COUNTYA, GISJOIN, YEAR, STATE, COUNTY, 
-           "Value of Farms", "Average Farm Value", "Value of Implements", "Average Implement Value",
-           "Average Farm Size", "Number of Farms", "Acres of Farmland", "Irrigated Acres", 
-           "Percentage of Farmland Irrigated", "Number of Cows", "Number of Cows per Farm", 
-           "Number of Horses", "Total Population", "Male Population", "Female Population", 
-           "Male Percentage of Population", "Total School Enrollment", 
-           "Percentage School Enrollment", "Urban Population", 
-           "Percent of Population in Urban Areas", "Illiterate Population", "Illiteracy Rate")
+# Read in the dataset made specifically for mapping
+
+x <- readRDS("mwData.rds")
 
 # Now subset by year
-# Really should have saved these as Rds files. Will do that later
+
+# I tried saving these as Rds files as well, but I kept getting a weird error
+# Might be a bug, according to SO
 Census_1870 <- x %>% filter(YEAR == "1870") %>%
     select_if(~ !all(is.na(.))) %>%
     select(-STATEA:-GISJOIN & -COUNTY)
@@ -127,15 +88,17 @@ Census_1960 <- x %>% filter(YEAR == "1960") %>%
     select_if(~ !all(is.na(.))) %>%
     select(-STATEA:-GISJOIN & -COUNTY)
 
-data_sets <- c("Census_1870", "Census_1880", "Census_1890", "Census_1900", "Census_1910", "Census_1920", "Census_1930", "Census_1940", "Census_1950", "Census_1960")
+
+# If I put "Census_1870" = "1870", would only the year show up in dropdown menu?
+data_sets <- c("1870" = "Census_1870", "1880" = "Census_1880", "1890" = "Census_1890", "1900" = "Census_1900", "1910" = "Census_1910", "1920" = "Census_1920",  "1930" ="Census_1930",  "1940" ="Census_1940",  "1950" ="Census_1950",  "1960" ="Census_1960")
 
 
-# Everything above this line should be condensed
-#####################
-
+# Read in the dataset for maps and models
 
 allData <- readRDS("my_data.rds")
 
+
+# START THE APP
 
 # Input
 
@@ -150,57 +113,76 @@ ui <- fluidPage(
                # remember that tab panel is for what shows up in the tab, and title panel is 
                # for what shows up at the top of the page within the tab                  
                
-               tabPanel("Intro to Midwestern Agriculture",
+               tabPanel("Introduction",
+                        titlePanel("A Brief Overview of Midwest Agriculture"),
                         
-                        # Give the page a title
-                        titlePanel("Relationship Between Farm Value and Education, by County"),
-                        
-                        # Generate a row with a sidebar
-                        sidebarLayout(      
-                            
-                            # Define the sidebar with one input
-                            # comprehensive options:
-                            # c("1870" = "1870", "1880" = "1880", "1890" = "1890", "1900" = "1900","1910" = "1910", "1920" = "1920", "1930" = "1930", "1940" = "1940", "1950" = "1950", "1960" = "1960")
-                            sidebarPanel(
-                                selectInput("Year", "Year:", 
-                                            choices=c("1870" = "1870", "1890" = "1890", "1910" = "1910"), 
-                                            multiple = TRUE)),
-                            helpText("From Great Plains Population and Environment Survey Agricultural and Social & Demographic Data.")
-                        ),
                         
                         # Create a spot for the plot
                         mainPanel(
                             tabsetPanel(id = "tabsMain",
-                                        tabPanel("Plot",
-                                                 
-                                                 # this tells the UI what plot to put 
-                                                 
-                                                 plotOutput("agPlot")
-                                        )))),
+                                        tabPanel("Farms & Acreage",
+                                                 # Generate a row with a sidebar
+                                                 mainPanel(
+                                                     imageOutput("acre_gif")
+                                                 )),
+                                        tabPanel("Urbanization",
+                                                 # Generate a row with a sidebar
+                                                 mainPanel(
+                                                     imageOutput("pop_gif")
+                                                 )),
+                                        tabPanel("Mechanization",
+                                                 # Generate a row with a sidebar
+                                                 mainPanel(
+                                                     imageOutput("plot2")
+                                                 ))
+                                        ))),
+               
+               
                tabPanel("Models",
                         
                         # Give the page a title
-                        titlePanel("Relationship Between Farm Value and Education, by County"),
-                        p("Make some models! (See notes)"),
-                        gt_output("model1")
-               ),
-         
+                        titlePanel("Agriculture and Education, by County"),
+                        
+                         
+                        # Create a spot for the plot
+                        mainPanel(
+                            tabsetPanel(id = "tabsMain",
+                                        tabPanel("Cows and Education",
+                                                 # Generate a row with a sidebar
+                                                 sidebarLayout(      
+                                                     
+                                                     # Define the sidebar with one input
+                                                     # comprehensive options:
+                                                     # c("1870" = "1870", "1880" = "1880", "1890" = "1890", "1900" = "1900","1910" = "1910", "1920" = "1920", "1930" = "1930", "1940" = "1940", "1950" = "1950", "1960" = "1960")
+                                                     sidebarPanel(
+                                                         selectInput("Year", "Year:", 
+                                                                     choices=c("1870" = "1870", "1890" = "1890", "1910" = "1910"), 
+                                                                     multiple = TRUE)),
+                                                     helpText("*Enter help text*")
+                                                 ),
+                                                 
+                                                 # this tells the UI what plot to put 
+                                                 
+                                                 plotOutput("agPlot"),
+                                                 p("Number of cows might be seen as a stand in for farm size. Is it?")
+                                        )))),
+               
                
                tabPanel("Maps",
                         titlePanel("Midwest Map Explorer"),
                         p("For best results, view in fullscreen mode."),
                         p("Maps may take up to 30 seconds to load...but they're worth it!"),
-                                sidebarLayout(
-                                                                  
-                                      sidebarPanel(
-                                            uiOutput("choose_dataset"),
-                                            uiOutput("choose_columns"),
-                                            uiOutput("choose_columns2"),
-                                                                      br(),
-                                                                  ),
-                                         mainPanel(leafletOutput("map1"),
-                                                   leafletOutput("map2"))
-                                     )),
+                        sidebarLayout(
+                            
+                            sidebarPanel(
+                                uiOutput("choose_dataset"),
+                                uiOutput("choose_columns"),
+                                uiOutput("choose_columns2"),
+                                br(),
+                            ),
+                            mainPanel(leafletOutput("map1"),
+                                      leafletOutput("map2"))
+                        )),
                
                tabPanel("About",
                         
@@ -217,15 +199,34 @@ ui <- fluidPage(
                         titlePanel("Citations"),
                         p("Steven Manson, Jonathan Schroeder, David Van Riper, and Steven Ruggles. IPUMS National Historical Geographic Information System: Version 14.0 [Database]. Minneapolis, MN: IPUMS. 2019. http://doi.org/10.18128/D050.V14.0"),
                         p("The College of William and Mary and the Minnesota Population Center. School Attendance Boundary Information System (SABINS): Version 1.0. Minneapolis, MN: University of Minnesota 2011.")
-               )
-               )
+               ),
+               
+               tabPanel("Codebook",
+                        titlePanel("How were variables measured for this project?"),
+                        p("Put some info here. An interactive gt table would be nice if you have time."))
     )
+)
 
 
 
 # use plotly to allow hover text to appear on plots, giving more info about the point
 
 server <- (function(input, output, session) {
+    
+    output$acre_gif <- renderImage({
+        list(src = "acre_gif.gif")
+        
+    }, deleteFile = FALSE)
+    
+    output$pop_gif <- renderImage({
+        list(src = "pop_gif.gif")
+        
+    }, deleteFile = FALSE)
+    
+    output$plot2 <- renderImage({
+        list(src = "plot2.gif")
+        
+    }, deleteFile = FALSE)
     
     # Fill in the spot we created for a plot
     output$agPlot <- renderPlot({
@@ -267,8 +268,8 @@ server <- (function(input, output, session) {
         colnames <- colnames1[!colnames1 %in% "YEAR" & !colnames1 %in% "STATE"]
         
         # Create the dropdown menu and select all columns by default
-        selectInput("columns", "Choose Variable:", 
-                    choices  = colnames)
+        selectizeInput("columns", "Choose Variable:", 
+                       choices  = colnames)
     })
     
     
@@ -360,9 +361,11 @@ server <- (function(input, output, session) {
         colnames <- colnames1[!colnames1 %in% "YEAR" & !colnames1 %in% "STATE"]
         
         # Create the dropdown menu and select all columns by default
-        selectInput("columns2", "Choose Variable to Compare:", 
-                    choices  = colnames,
-                    selected = "")
+        selectizeInput("columns2", "Choose Variable to Compare:", 
+                       choices  = colnames,
+                       options = list(
+                           placeholder = 'Variables...',
+                           onInitialize = I('function() { this.setValue(""); }')))
     })
     
     output$map2 <- renderLeaflet({
@@ -437,7 +440,7 @@ server <- (function(input, output, session) {
         
     })
     
-   
+    
     
     output$model1 <- render_gt({
         
