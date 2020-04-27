@@ -40,6 +40,10 @@ library(sf)
 
 maleedu_model <- readRDS("maleedu_model.rds") 
 
+cowedu_model <- readRDS("cowedu_model.rds")
+
+cows_size_model <- readRDS("cows_size_model.rds")
+
 # Read in the shapefiles
 
 shapefiles <- readRDS(file = "shapefiles.rds")
@@ -176,7 +180,10 @@ ui <- fluidPage(
                                                        # this tells the UI what plot to put 
                                                        
                                                        plotOutput("impedu_plot"),
-                                                       p("say some stuff")
+                                                       p("say some stuff"),
+                                                       gt_output("cowedu_gt"),
+                                                       p("comments")
+                                                       
                                               ),
                                               
                                               tabPanel("Cattle",
@@ -198,7 +205,9 @@ ui <- fluidPage(
                                                        # this tells the UI what plot to put 
                                                        
                                                        plotOutput("agPlot"),
-                                                       p("Number of cows might be seen as a stand in for farm size. Is it?")
+                                                       p("Number of cows might be seen as a stand in for farm size. Is it?"),
+                                                       gt_output("cows_size_gt"),
+                                                       p("comments")
                                               ),
                                               
                                               tabPanel("Gender",
@@ -322,6 +331,17 @@ server <- (function(input, output, session) {
             theme_classic()
     })
     
+    output$cowedu_gt <- render_gt({
+        cowedu_model %>%
+            select(term, conf.low, estimate, conf.high) %>%
+            gt() %>%
+            tab_header(title = "Effect Cows and Implements on Enrollment",
+                       subtitle = "With 95% Confidence Interval") %>%
+            cols_label(term = "Coefficient Name", conf.low = "Lower Bound", estimate = "Estimated Value", conf.high = "Upper Bound") %>%
+            fmt_number(columns = vars(conf.low, estimate, conf.high), decimals = 4)
+        
+    })
+    
     # Fill in the spot we created for a plot
     output$agPlot <- renderPlot({
         
@@ -344,6 +364,18 @@ server <- (function(input, output, session) {
                  x = "Average Cows per Farm",
                  y = "Percent of Population Enrolled in School") +
             theme_classic()
+    })
+    
+    
+    output$cows_size_gt <- render_gt({
+        cows_size_model %>%
+            select(term, conf.low, estimate, conf.high) %>%
+            gt() %>%
+            tab_header(title = "Effect Cows and Farm Size on Enrollment",
+                       subtitle = "With 95% Confidence Interval") %>%
+            cols_label(term = "Coefficient Name", conf.low = "Lower Bound", estimate = "Estimated Value", conf.high = "Upper Bound") %>%
+            fmt_number(columns = vars(conf.low, estimate, conf.high), decimals = 4)
+        
     })
     
     # maleedu plot and gt
@@ -606,7 +638,7 @@ server <- (function(input, output, session) {
     
     output$codebook <- renderTable({
         if (length(input$variables) == 0) return(mtcars)
-        mtcars %>% dplyr::select(!!!input$variables)
+        mtcars %>% dplyr::select(!!input$variables)
     }, rownames = TRUE)
     
 })
