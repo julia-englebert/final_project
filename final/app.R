@@ -159,7 +159,7 @@ ui <- fluidPage(
                         mainPanel("",
                                   tabsetPanel(id = "tabsMain",
                                               
-                                              tabPanel("Implements and Education",
+                                              tabPanel("Implements",
                                                        # Generate a row with a sidebar
                                                        sidebarLayout(      
                                                            
@@ -179,8 +179,10 @@ ui <- fluidPage(
                                                        p("say some stuff")
                                               ),
                                               
-                                              tabPanel("Cattle and Education",
+                                              tabPanel("Cattle",
                                                        # Generate a row with a sidebar
+                                                       
+                                                       
                                                        sidebarLayout(      
                                                            
                                                            # Define the sidebar with one input
@@ -199,14 +201,17 @@ ui <- fluidPage(
                                                        p("Number of cows might be seen as a stand in for farm size. Is it?")
                                               ),
                                               
-                                              tabPanel("Gender and Education",
+                                              tabPanel("Gender",
                                                        
                                                        #mainPanel("",
                                                                  #gt_output("maleedu_gt"))
                                                        
                                                        fluidRow(column(width = 6, plotOutput("maleedu_plot")),
                                                                 column(width = 6, #align = "center",
-                                                                       gt_output("maleedu_gt")))
+                                                                       gt_output("maleedu_gt"))), 
+                                                       fluidRow(column(width = 6, textOutput("maletext1")),
+                                                                column(width = 6, #align = "center",
+                                                                       textOutput("maletext2")))
                                                        
                                               )
                                   )
@@ -248,7 +253,11 @@ ui <- fluidPage(
                
                tabPanel("Codebook",
                         titlePanel("How were variables measured for this project?"),
-                        p("Put some info here. An interactive gt table would be nice if you have time."))
+                        p("Choose a variable to find out!"), 
+                        varSelectInput("variables", "Variable:", mtcars, multiple = FALSE),
+                        helpText("*Enter help text*"),
+                        tableOutput("codebook")
+                        )
     )
 )
 
@@ -378,6 +387,17 @@ server <- (function(input, output, session) {
             
             fmt_number(columns = vars(n_farm_lower, n_farm_coef, n_farm_upper, pct_male_lower, pct_male_coef,pct_male_upper, interaction_lower, interaction_coef, interaction_upper), decimals = 4)
         
+    })
+    
+    # Gender text
+    output$maletext1 <- renderText({
+        
+        "This is the first commentary about gender"
+    })
+    
+    output$maletext2 <- renderText({
+        
+        "This is the second commentary about gender"
     })
     
     
@@ -583,6 +603,12 @@ server <- (function(input, output, session) {
         model1
         
     })
+    
+    output$codebook <- renderTable({
+        if (length(input$variables) == 0) return(mtcars)
+        mtcars %>% dplyr::select(!!!input$variables)
+    }, rownames = TRUE)
+    
 })
 
 
