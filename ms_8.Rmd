@@ -1735,6 +1735,111 @@ saveRDS(Census_1960, file = "final/1960.rds")
 # Working App
 
 ```{r workingApp}
+#
+# This is a Shiny web application. You can run the application by clicking
+# the 'Run App' button above.
+#
+# Find out more about building applications with Shiny here:
+#
+#    http://shiny.rstudio.com/
+#
+
+# LOAD THE REQUIRED PACKAGES
+
+library(shiny)
+library(haven)
+library(tidyverse)
+library(gt)
+library(devtools)
+library(tibble)
+library(foreign)
+library(scales)
+library(shinythemes)
+library(plotly)
+library(leaflet)
+library(broom)
+library(patchwork)
+library(magick)
+library(giphyr)
+library(gridExtra)
+
+
+# packages for mapping
+library(leaflet)
+library(spdplyr)
+library(rmapshaper)
+library(sf)
+
+
+# READ IN THE DATA
+
+# Read in the model for gt and plot
+
+maleedu_model <- readRDS("maleedu_model.rds") 
+
+# Read in the shapefiles
+
+shapefiles <- readRDS(file = "shapefiles.rds")
+
+
+# Read in the dataset made specifically for mapping
+
+x <- readRDS("mwData.rds")
+
+# Now subset by year
+
+# I tried saving these as Rds files as well, but I kept getting a weird error
+# Might be a bug, according to SO
+Census_1870 <- x %>% filter(YEAR == "1870") %>%
+    select_if(~ !all(is.na(.))) %>%
+    select(-STATEA:-GISJOIN & -COUNTY)
+
+Census_1880 <- x %>% filter(YEAR == "1880") %>%
+    select_if(~ !all(is.na(.))) %>%
+    select(-STATEA:-GISJOIN & -COUNTY)
+
+Census_1890 <- x %>% filter(YEAR == "1890") %>%
+    select_if(~ !all(is.na(.))) %>%
+    select(-STATEA:-GISJOIN & -COUNTY)
+
+Census_1900 <- x %>% filter(YEAR == "1900") %>%
+    select_if(~ !all(is.na(.))) %>%
+    select(-STATEA:-GISJOIN & -COUNTY)
+
+Census_1910 <- x %>% filter(YEAR == "1910") %>%
+    select_if(~ !all(is.na(.))) %>%
+    select(-STATEA:-GISJOIN & -COUNTY)
+
+Census_1920 <- x %>% filter(YEAR == "1920") %>%
+    select_if(~ !all(is.na(.))) %>%
+    select(-STATEA:-GISJOIN & -COUNTY)
+
+Census_1930 <- x %>% filter(YEAR == "1930") %>%
+    select_if(~ !all(is.na(.))) %>%
+    select(-STATEA:-GISJOIN & -COUNTY)
+
+Census_1940 <- x %>% filter(YEAR == "1940") %>%
+    select_if(~ !all(is.na(.))) %>%
+    select(-STATEA:-GISJOIN & -COUNTY)
+
+Census_1950 <- x %>% filter(YEAR == "1950") %>%
+    select_if(~ !all(is.na(.))) %>%
+    select(-STATEA:-GISJOIN & -COUNTY)
+
+Census_1960 <- x %>% filter(YEAR == "1960") %>%
+    select_if(~ !all(is.na(.))) %>%
+    select(-STATEA:-GISJOIN & -COUNTY)
+
+
+# If I put "Census_1870" = "1870", would only the year show up in dropdown menu?
+data_sets <- c("1870" = "Census_1870", "1880" = "Census_1880", "1890" = "Census_1890", "1900" = "Census_1900", "1910" = "Census_1910", "1920" = "Census_1920",  "1930" ="Census_1930",  "1940" ="Census_1940",  "1950" ="Census_1950",  "1960" ="Census_1960")
+
+
+# Read in the dataset for maps and models
+
+allData <- readRDS("my_data.rds")
+
+
 # START THE APP
 
 # Input
@@ -1750,57 +1855,116 @@ ui <- fluidPage(
                # remember that tab panel is for what shows up in the tab, and title panel is 
                # for what shows up at the top of the page within the tab                  
                
-               tabPanel("Intro to Midwestern Agriculture",
+               tabPanel("Introduction",
+                        titlePanel("A Brief Overview of Midwest Agriculture"),
                         
-                        # Give the page a title
-                        titlePanel("Relationship Between Farm Value and Education, by County"),
-                        
-                        # Generate a row with a sidebar
-                        sidebarLayout(      
-                            
-                            # Define the sidebar with one input
-                            # comprehensive options:
-                            # c("1870" = "1870", "1880" = "1880", "1890" = "1890", "1900" = "1900","1910" = "1910", "1920" = "1920", "1930" = "1930", "1940" = "1940", "1950" = "1950", "1960" = "1960")
-                            sidebarPanel(
-                                selectInput("Year", "Year:", 
-                                            choices=c("1870" = "1870", "1890" = "1890", "1910" = "1910"), 
-                                            multiple = TRUE)),
-                            helpText("From Great Plains Population and Environment Survey Agricultural and Social & Demographic Data.")
-                        ),
                         
                         # Create a spot for the plot
+                        # Why is the text on top of the image?? :(
                         mainPanel(
                             tabsetPanel(id = "tabsMain",
-                                        tabPanel("Plot",
+                                        tabPanel("Farms & Acreage",
                                                  
-                                                 # this tells the UI what plot to put 
+                                                 # Create a fluid row in order to comment next to the gifs
+                                                 # column specifications might need to be changed
                                                  
-                                                 plotOutput("agPlot")
-                                        )))),
+                                                 fluidRow(column(width = 3, textOutput("acre_com")),
+                                                          column(width = 9, align = "center",
+                                                                 imageOutput("acre_gif")))
+                                          
+                                        ),
+                                        tabPanel("Urbanization",
+                                                 # Generate a row with a sidebar
+                                                 fluidRow(column(width = 3, textOutput("pop_com")),
+                                                              column(width = 9, align = "center",
+                                                                     imageOutput("pop_gif")))
+                                                 ),
+                                        tabPanel("Mechanization",
+                                                fluidRow(column(width = 3, textOutput("plot2_com")),
+                                                              column(width = 9, align = "center",
+                                                                     imageOutput("plot2")))
+                            )))),
+               
+               
                tabPanel("Models",
                         
                         # Give the page a title
-                        titlePanel("Relationship Between Farm Value and Education, by County"),
-                        p("Make some models! (See notes)"),
-                        gt_output("model1")
-               ),
-         
+                        titlePanel("Agriculture and Education, by County"),
+                        
+                        
+                        # Create a spot for the plot
+                        mainPanel("",
+                                  tabsetPanel(id = "tabsMain",
+                                              
+                                              tabPanel("Implements and Education",
+                                                       # Generate a row with a sidebar
+                                                       sidebarLayout(      
+                                                           
+                                                           # Define the sidebar with one input
+                                                           # comprehensive options:
+                                                           # c("1870" = "1870", "1880" = "1880", "1890" = "1890", "1900" = "1900","1910" = "1910", "1920" = "1920", "1930" = "1930", "1940" = "1940", "1950" = "1950", "1960" = "1960")
+                                                           sidebarPanel(
+                                                               selectInput("impYear", "Year:", 
+                                                                           choices=c("1870" = "1870", "1890" = "1890", "1910" = "1910", "1920" = "1920", "1930" = "1930", "1940" = "1940"), 
+                                                                           multiple = TRUE)),
+                                                           helpText("*Enter help text*")
+                                                       ),
+                                                       
+                                                       # this tells the UI what plot to put 
+                                                       
+                                                       plotOutput("impedu_plot"),
+                                                       p("say some stuff")
+                                              ),
+                                              
+                                              tabPanel("Cattle and Education",
+                                                       # Generate a row with a sidebar
+                                                       sidebarLayout(      
+                                                           
+                                                           # Define the sidebar with one input
+                                                           # comprehensive options:
+                                                           # c("1870" = "1870", "1880" = "1880", "1890" = "1890", "1900" = "1900","1910" = "1910", "1920" = "1920", "1930" = "1930", "1940" = "1940", "1950" = "1950", "1960" = "1960")
+                                                           sidebarPanel(
+                                                               selectInput("cowYear", "Year:", 
+                                                                           choices=c("1870" = "1870", "1890" = "1890", "1910" = "1910"), 
+                                                                           multiple = TRUE)),
+                                                           helpText("*Enter help text*")
+                                                       ),
+                                                       
+                                                       # this tells the UI what plot to put 
+                                                       
+                                                       plotOutput("agPlot"),
+                                                       p("Number of cows might be seen as a stand in for farm size. Is it?")
+                                              ),
+                                              
+                                              tabPanel("Gender and Education",
+                                                       
+                                                       #mainPanel("",
+                                                                 #gt_output("maleedu_gt"))
+                                                       
+                                                       fluidRow(column(width = 6, plotOutput("maleedu_plot")),
+                                                                column(width = 6, #align = "center",
+                                                                       gt_output("maleedu_gt")))
+                                                       
+                                              )
+                                  )
+                        )),
+               
                
                tabPanel("Maps",
                         titlePanel("Midwest Map Explorer"),
                         p("For best results, view in fullscreen mode."),
                         p("Maps may take up to 30 seconds to load...but they're worth it!"),
-                                sidebarLayout(
-                                                                  
-                                      sidebarPanel(
-                                            uiOutput("choose_dataset"),
-                                            uiOutput("choose_columns"),
-                                            uiOutput("choose_columns2"),
-                                                                      br(),
-                                                                  ),
-                                         mainPanel(leafletOutput("map1"),
-                                                   leafletOutput("map2"))
-                                     )),
+                        sidebarLayout(
+                            
+                            sidebarPanel(
+                                uiOutput("choose_dataset"),
+                                uiOutput("choose_columns"),
+                                uiOutput("choose_columns2"),
+                                br(),
+                            ),
+                            mainPanel(leafletOutput("map1"),
+                                      leafletOutput("map2"))
+                        )),
                
                tabPanel("About",
                         
@@ -1817,9 +1981,13 @@ ui <- fluidPage(
                         titlePanel("Citations"),
                         p("Steven Manson, Jonathan Schroeder, David Van Riper, and Steven Ruggles. IPUMS National Historical Geographic Information System: Version 14.0 [Database]. Minneapolis, MN: IPUMS. 2019. http://doi.org/10.18128/D050.V14.0"),
                         p("The College of William and Mary and the Minnesota Population Center. School Attendance Boundary Information System (SABINS): Version 1.0. Minneapolis, MN: University of Minnesota 2011.")
-               )
-               )
+               ),
+               
+               tabPanel("Codebook",
+                        titlePanel("How were variables measured for this project?"),
+                        p("Put some info here. An interactive gt table would be nice if you have time."))
     )
+)
 
 
 
@@ -1827,14 +1995,72 @@ ui <- fluidPage(
 
 server <- (function(input, output, session) {
     
+    
+    output$acre_com <- renderText({
+        
+        "This is the commentary about farm acreage"
+    })
+    
+    output$acre_gif <- renderImage({
+        list(src = "acre_gif.gif")
+        
+    }, deleteFile = FALSE)
+    
+    output$pop_com <- renderText({
+        
+        "This is the commentary about population"
+    })
+    
+    output$pop_gif <- renderImage({
+        list(src = "pop_gif.gif")
+        
+    }, deleteFile = FALSE)
+    
+    output$plot2_com <- renderText({
+        
+        "This is the commentary about mechanization"
+    })
+    
+    output$plot2 <- renderImage({
+        list(src = "plot2.gif")
+        
+    }, deleteFile = FALSE)
+    
+    # Implements plot
+    
+    output$impedu_plot <- renderPlot({
+        
+        allData %>%
+            filter(YEAR %in% input$impYear) %>%
+            mutate(YEAR = as.factor(YEAR)) %>%
+            mutate(YEAR = fct_explicit_na(YEAR, na_level = NA)) %>%
+            group_by(YEAR) %>%
+            select(YEAR, avg_value_implements, pct_enrolled) %>%
+            na.omit() %>%
+            ggplot(aes(x = avg_value_implements, y = pct_enrolled, color = YEAR)) + 
+            geom_point(alpha = 0.1) +
+            geom_smooth(method = "lm", se = FALSE) +
+            scale_fill_viridis_d(aesthetics = "color") +
+            ylim(0, 45) + 
+            labs(title = "Relationship Between Farm Implements and Education, by County",
+                 subtitle = "Midwestern United States", 
+                 x = "Average Value of Implements", 
+                 y = "Percent Population Enrolled in School") +
+            scale_x_log10(labels = comma) +
+            theme_classic()
+    })
+    
     # Fill in the spot we created for a plot
     output$agPlot <- renderPlot({
         
         # Render a plot
         allData %>%
-            filter(YEAR %in% input$Year) %>%
+            filter(YEAR %in% input$cowYear) %>%
             mutate(YEAR = as.factor(YEAR)) %>%
+            mutate(YEAR = fct_explicit_na(YEAR, na_level = NA)) %>%
             group_by(YEAR) %>%
+            select(YEAR, cows_per_farm, pct_enrolled) %>%
+            na.omit() %>%
             ggplot(aes(x = cows_per_farm, y = pct_enrolled, color = YEAR)) +
             geom_point(alpha = 0.1) +
             geom_smooth(method = "lm", se = FALSE) +
@@ -1847,6 +2073,52 @@ server <- (function(input, output, session) {
                  y = "Percent of Population Enrolled in School") +
             theme_classic()
     })
+    
+    # maleedu plot and gt
+    
+    output$maleedu_plot <- renderPlot({
+        maleedu_model %>%
+            ungroup() %>%
+            select(YEAR, pct_male_coef, pct_male_upper, pct_male_lower) %>%
+            mutate(YEAR = as.factor(YEAR)) %>%
+            group_by(YEAR) %>%
+            ggplot(aes(x = YEAR, y = pct_male_coef)) + 
+            geom_errorbar(ymin = maleedu_model$pct_male_lower, ymax = maleedu_model$pct_male_upper, color = "#453781FF") + 
+            geom_point(color = "#440154FF") +
+            theme_classic() +
+            ylim(-1.5, 0.5) + 
+            labs(x = "Year",
+                 y = "Coefficient",
+                 title = "Percent Male Coefficients Over Time",
+                 subtitle = "Measuring the effect of being male\non school enrollment")
+    })
+    
+    output$maleedu_gt <- render_gt({
+        maleedu_model%>%
+            ungroup() %>%
+            
+            # Select the columns needed, as per the instructions
+            
+            select(-data:-reg_results) %>%
+            
+            gt() %>%
+            
+            # Add the desired titles, subtitles, and column labels
+            
+            tab_header(title = "Effect of Gender and Number of Farms on Enrollment",
+                       subtitle = "With 95% Confidence Interval") %>%
+            tab_spanner(label = "Farm Coefficients", columns = vars(n_farm_lower, n_farm_coef, n_farm_upper)) %>%
+            tab_spanner(label = "Percent Male Coefficients", columns = vars(pct_male_lower, pct_male_coef,pct_male_upper)) %>%
+            tab_spanner(label = "Interaction Coefficients", columns = vars(interaction_lower, interaction_coef, interaction_upper)) %>%
+            cols_label(YEAR = "Year", n_farm_coef	= "Estimate", n_farm_upper = "Upper", n_farm_lower = "Lower", pct_male_coef = "Estimate", pct_male_upper = "Upper", pct_male_lower = "Lower",	interaction_coef = "Estimate", interaction_upper = "Upper", interaction_lower = "Lower") %>%
+            # Round all values to two decimal places
+            
+            fmt_number(columns = vars(n_farm_lower, n_farm_coef, n_farm_upper, pct_male_lower, pct_male_coef,pct_male_upper, interaction_lower, interaction_coef, interaction_upper), decimals = 4)
+        
+    })
+    
+    
+    # Map output
     
     output$choose_dataset <- renderUI({
         selectInput("dataset", "Choose Census Year:", as.list(data_sets))
@@ -1868,7 +2140,7 @@ server <- (function(input, output, session) {
         
         # Create the dropdown menu and select all columns by default
         selectizeInput("columns", "Choose Variable:", 
-                    choices  = colnames)
+                       choices  = colnames)
     })
     
     
@@ -1961,10 +2233,10 @@ server <- (function(input, output, session) {
         
         # Create the dropdown menu and select all columns by default
         selectizeInput("columns2", "Choose Variable to Compare:", 
-                    choices  = colnames,
-                    options = list(
-                        placeholder = 'Variables...',
-                        onInitialize = I('function() { this.setValue(""); }')))
+                       choices  = colnames,
+                       options = list(
+                           placeholder = 'Variables...',
+                           onInitialize = I('function() { this.setValue(""); }')))
     })
     
     output$map2 <- renderLeaflet({
@@ -2039,7 +2311,7 @@ server <- (function(input, output, session) {
         
     })
     
-   
+    
     
     output$model1 <- render_gt({
         
@@ -2055,6 +2327,7 @@ server <- (function(input, output, session) {
 # Run the application 
 
 shinyApp(ui = ui, server = server)
+
 
 ```
 
