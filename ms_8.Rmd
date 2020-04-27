@@ -614,7 +614,7 @@ impedu_plot <- allData %>%
 ggsave("final/impedu_plot.png", plot = impedu_plot)
 
 # See implement plot (plot2) saved as gif
-
+# also use cowedu model
 
 
 # INCORPORATE
@@ -707,6 +707,15 @@ maleedu_plot <- maleedu_model %>%
 ggsave("final/maleedu_plot.png", plot = maleedu_plot)
 
 
+cows_size_model <- allData %>%
+  select(YEAR, pct_enrolled, cows_per_farm, avg_size) %>%
+  na.omit() %>%
+  lm(pct_enrolled ~ cows_per_farm*avg_size, data = .) %>%
+  tidy(conf.int = TRUE)
+
+saveRDS(cows_size_model, "final/cows_size_model.rds")
+
+
 # INCORPORATE
 # more cows = more enrollment
 cowedu_model <- allData %>%
@@ -714,6 +723,8 @@ cowedu_model <- allData %>%
   na.omit() %>%
   lm(pct_enrolled ~ cows_per_farm*avg_value_implements, data = .) %>%
   tidy(conf.int = TRUE) 
+
+saveRDS(cowedu_model, "final/cowedu_model.rds")
   
 cowedu_gt <- cowedu_model %>%
   select(term, conf.low, estimate, conf.high) %>%
@@ -1718,16 +1729,6 @@ Census_1960 <- x %>% filter(YEAR == "1960") %>%
     select_if(~ !all(is.na(.))) %>%
     select(-STATEA:-GISJOIN & -COUNTY)
 
-saveRDS(Census_1870, file = "final/1870.rds")
-saveRDS(Census_1880, file = "final/1880.rds")
-saveRDS(Census_1890, file = "final/1890.rds")
-saveRDS(Census_1900, file = "final/1900.rds")
-saveRDS(Census_1910, file = "final/1910.rds")
-saveRDS(Census_1920, file = "final/1920.rds")
-saveRDS(Census_1930, file = "final/1930.rds")
-saveRDS(Census_1940, file = "final/1940.rds")
-saveRDS(Census_1950, file = "final/1950.rds")
-saveRDS(Census_1960, file = "final/1960.rds")
 
 
 ```

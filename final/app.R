@@ -183,15 +183,15 @@ ui <- fluidPage(
                                                                selectInput("impYear", "Year:", 
                                                                            choices=c("1870" = "1870", "1890" = "1890", "1910" = "1910", "1920" = "1920", "1930" = "1930", "1940" = "1940"), 
                                                                            multiple = TRUE)),
-                                                           helpText("*Enter help text*")
+                                                           helpText("Select a year from the dropdown menu in order to explore the correlation between mechanization and school enrollment over time.")
                                                        ),
                                                        
                                                        # this tells the UI what plot to put 
                                                        
                                                        plotOutput("impedu_plot"),
-                                                       p("say some stuff"),
+                                                       p("The plot shows a positive correlation between school enrollment and implement value in 1870, but that correlation disappears in later years."),
                                                        gt_output("cowedu_gt"),
-                                                       p("comments")
+                                                       p("This linear regression model shows that an increase in average implement value has essentially no effect on school enrollment. Curiously, the number of cows per farm is strongly associated with higher school enrollment, as we will explore in the next tab.")
                                                        
                                               ),
                                               
@@ -208,15 +208,15 @@ ui <- fluidPage(
                                                                selectInput("cowYear", "Year:", 
                                                                            choices=c("1870" = "1870", "1890" = "1890", "1910" = "1910"), 
                                                                            multiple = TRUE)),
-                                                           helpText("*Enter help text*")
+                                                           helpText("Select a year from the dropdown menu in order to explore the correlation between cattle ownership and school enrollment over time.")
                                                        ),
                                                        
                                                        # this tells the UI what plot to put 
                                                        
                                                        plotOutput("agPlot"),
-                                                       p("Number of cows might be seen as a stand in for farm size. Is it?"),
+                                                       p("The plot shows a positive correlation between school enrollment and the average number of cows per farm for the years where data was available. The number of cows might simply be a confounding variable that acts as a stand-in for farm size, but as the table below will show, this does not seem to be the case."),
                                                        gt_output("cows_size_gt"),
-                                                       p("comments")
+                                                       p("This linear regression model shows that a one-cow increase in the number of cows per farm in a given county results in a 0.23% increase in school enrollment. This is significant given that school enrollment hovers around just 25% in most counties for the years studied. Curiously, farm size is not associated with a similarly significant increase in enrollment, and the interaction between cows per farm and farm size actually leads to a decrease in enrollment.")
                                               ),
                                               
                                               tabPanel("Gender",
@@ -238,8 +238,8 @@ ui <- fluidPage(
                
                tabPanel("Maps",
                         titlePanel("Midwest Map Explorer"),
-                        p("For best results, view in fullscreen mode."),
-                        helpText("Maps may take up to 30 seconds to load...but they're worth the wait."),
+                        p("Choose a census year and up to two variables to generate and compare maps of the midwest."),
+                        helpText("Please note that maps may take up to 30 seconds to load."),
                         sidebarLayout(
                             
                             sidebarPanel(
@@ -272,9 +272,9 @@ ui <- fluidPage(
                
                tabPanel("Codebook",
                         titlePanel("How were variables measured for this project?"),
-                        p("Choose a variable to find out!"), 
+                        p("Choose a variable to find out! Take special note of the changes in school enrollment and farm value metrics over time."), 
                         varSelectInput("variables", "Variable:", codebook, multiple = FALSE),
-                        helpText("Take note of the changes in school enrollment and farm value metrics."),
+                        helpText("These variable descriptions represent a condensed version of the codebooks provided by IPUMS NHGIS."),
                         tableOutput("codebook")
                         )
     )
@@ -434,12 +434,12 @@ server <- (function(input, output, session) {
     # Gender text
     output$maletext1 <- renderText({
         
-        "This is the first commentary about gender"
+        "This plot shows shows how the effect of being male on school enrollment reversed over time. From 1870 to 1920, having a higher percentage of males in the population associated with a decrease in school enrollment. From 1930 onward, however, that males and enrollment were positively correlated."
     })
     
     output$maletext2 <- renderText({
         
-        "This is the second commentary about gender"
+        "This table shows a linear regression model of the number of farms in a given county, the percent of the population that was male, and the interaction of those two as compared to the percent of the population enrolled in school. In contrast to gender, having more farms in a given county was not associated with a significant change in enrollment in any year."
     })
     
     
