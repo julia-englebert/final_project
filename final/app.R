@@ -25,6 +25,7 @@ library(patchwork)
 library(magick)
 library(giphyr)
 library(gridExtra)
+library(readxl)
 
 
 # packages for mapping
@@ -43,6 +44,13 @@ maleedu_model <- readRDS("maleedu_model.rds")
 cowedu_model <- readRDS("cowedu_model.rds")
 
 cows_size_model <- readRDS("cows_size_model.rds")
+
+# Read in the codebook
+# This is an excel sheet that I made in order to condense the original codebooks provided by NHGIS
+
+codebook <- read_excel("mw_codebook.xlsx") %>% 
+    remove_rownames %>% 
+    column_to_rownames(var="Year")
 
 # Read in the shapefiles
 
@@ -98,7 +106,8 @@ Census_1960 <- x %>% filter(YEAR == "1960") %>%
     select(-STATEA:-GISJOIN & -COUNTY)
 
 
-# If I put "Census_1870" = "1870", would only the year show up in dropdown menu?
+
+# Combine the datasets into a vector, renaming them by only the year 
 data_sets <- c("1870" = "Census_1870", "1880" = "Census_1880", "1890" = "Census_1890", "1900" = "Census_1900", "1910" = "Census_1910", "1920" = "Census_1920",  "1930" ="Census_1930",  "1940" ="Census_1940",  "1950" ="Census_1950",  "1960" ="Census_1960")
 
 
@@ -122,33 +131,33 @@ ui <- fluidPage(
                # remember that tab panel is for what shows up in the tab, and title panel is 
                # for what shows up at the top of the page within the tab                  
                
-               tabPanel("Introduction",
-                        titlePanel("A Brief Overview of Midwest Agriculture"),
-                        
+               tabPanel("Welcome",
+                        titlePanel("Midwest Agriculture in Brief"),
                         
                         # Create a spot for the plot
                         # Why is the text on top of the image?? :(
                         mainPanel(
+                            helpText("To understand the relationship between agriculture and education, it’s helpful to elucidate trends in agriculture over time. Click the tabs below to visualize major changes."),
                             tabsetPanel(id = "tabsMain",
                                         tabPanel("Farms & Acreage",
                                                  
                                                  # Create a fluid row in order to comment next to the gifs
                                                  # column specifications might need to be changed
                                                  
-                                                 fluidRow(column(width = 3, textOutput("acre_com")),
-                                                          column(width = 9, align = "center",
+                                                 fluidRow(column(width = 5, textOutput("acre_com")),
+                                                          column(width = 7, align = "center",
                                                                  imageOutput("acre_gif")))
                                           
                                         ),
                                         tabPanel("Urbanization",
                                                  # Generate a row with a sidebar
-                                                 fluidRow(column(width = 3, textOutput("pop_com")),
-                                                              column(width = 9, align = "center",
+                                                 fluidRow(column(width = 5, textOutput("pop_com")),
+                                                              column(width = 7, align = "center",
                                                                      imageOutput("pop_gif")))
                                                  ),
                                         tabPanel("Mechanization",
-                                                fluidRow(column(width = 3, textOutput("plot2_com")),
-                                                              column(width = 9, align = "center",
+                                                fluidRow(column(width = 5, textOutput("plot2_com")),
+                                                              column(width = 7, align = "center",
                                                                      imageOutput("plot2")))
                             )))),
                
@@ -230,7 +239,7 @@ ui <- fluidPage(
                tabPanel("Maps",
                         titlePanel("Midwest Map Explorer"),
                         p("For best results, view in fullscreen mode."),
-                        p("Maps may take up to 30 seconds to load...but they're worth it!"),
+                        helpText("Maps may take up to 30 seconds to load...but they're worth the wait."),
                         sidebarLayout(
                             
                             sidebarPanel(
@@ -257,14 +266,15 @@ ui <- fluidPage(
                         br(),
                         titlePanel("Citations"),
                         p("Steven Manson, Jonathan Schroeder, David Van Riper, and Steven Ruggles. IPUMS National Historical Geographic Information System: Version 14.0 [Database]. Minneapolis, MN: IPUMS. 2019. http://doi.org/10.18128/D050.V14.0"),
-                        p("The College of William and Mary and the Minnesota Population Center. School Attendance Boundary Information System (SABINS): Version 1.0. Minneapolis, MN: University of Minnesota 2011.")
-               ),
+                        p("The College of William and Mary and the Minnesota Population Center. School Attendance Boundary Information System (SABINS): Version 1.0. Minneapolis, MN: University of Minnesota 2011."),
+                        p("Ian Webster. U.S. Inflation Calculator: 1635-2020, Department of Labor Data. Official Data Foundation, https://www.officialdata.org.")
+                        ),
                
                tabPanel("Codebook",
                         titlePanel("How were variables measured for this project?"),
                         p("Choose a variable to find out!"), 
-                        varSelectInput("variables", "Variable:", mtcars, multiple = FALSE),
-                        helpText("*Enter help text*"),
+                        varSelectInput("variables", "Variable:", codebook, multiple = FALSE),
+                        helpText("Take note of the changes in school enrollment and farm value metrics."),
                         tableOutput("codebook")
                         )
     )
@@ -279,7 +289,7 @@ server <- (function(input, output, session) {
     
     output$acre_com <- renderText({
         
-        "This is the commentary about farm acreage"
+        "The bar plot on the left shows that a general upward trend in the number of acres allotted to farming each year. What happened in 1920? It’s difficult to say, but perhaps the Economic Boom of the 1920s followed by the Great Crash of 1929 caused farmers to purchase and then lose vast amounts of land. The line plot on the right shows that the number of farms increased until the early 20th century before beginning to decline in most states. Taken together, these plots show that farms in the Midwest have been steadily increasing in size, while the number of people owning farms has been steadily decreasing."
     })
     
     output$acre_gif <- renderImage({
@@ -289,7 +299,7 @@ server <- (function(input, output, session) {
     
     output$pop_com <- renderText({
         
-        "This is the commentary about population"
+        "Along with most regions of the world, the Midwest was experiencing rapid population growth during the years studied. As the plot on the left shows, population in all states except for North and South Dakota were trending upward. At the same time, the plot on the right illustrates that people were increasingly dwelling in urban areas. Although the urban population was almost nonexistent in 1870, it far surpasses the rural population by 1950."
     })
     
     output$pop_gif <- renderImage({
@@ -299,7 +309,7 @@ server <- (function(input, output, session) {
     
     output$plot2_com <- renderText({
         
-        "This is the commentary about mechanization"
+        "Farming methods were undergoing dramatic change during the period studied.This plot shows the value of farm implements and machinery each year, demonstrating the rapid mechanization of Midwest agriculture."
     })
     
     output$plot2 <- renderImage({
@@ -637,8 +647,8 @@ server <- (function(input, output, session) {
     })
     
     output$codebook <- renderTable({
-        if (length(input$variables) == 0) return(mtcars)
-        mtcars %>% dplyr::select(!!input$variables)
+        if (length(input$variables) == 0) return(codebook)
+        codebook %>% dplyr::select(!!input$variables)
     }, rownames = TRUE)
     
 })
