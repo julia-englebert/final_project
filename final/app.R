@@ -15,7 +15,8 @@ library(tidyverse)
 library(gt)
 library(devtools)
 library(tibble)
-library(foreign)
+# don't think I need this
+#library(foreign)
 library(scales)
 library(shinythemes)
 library(plotly)
@@ -54,7 +55,8 @@ codebook <- read_excel("mw_codebook.xlsx") %>%
 
 # Read in the shapefiles
 
-shapefiles <- readRDS(file = "shapefiles.rds")
+shapefiles <- readRDS(file = "shapefiles.rds") %>% 
+    head(n = 3L)
 
 
 # Read in the dataset made specifically for mapping
@@ -64,7 +66,7 @@ x <- readRDS("mwData.rds")
 # Now subset by year
 
 # I tried saving these as Rds files as well, but I kept getting a weird error
-# Might be a bug, according to SO
+
 Census_1870 <- x %>% filter(YEAR == "1870") %>%
     select_if(~ !all(is.na(.))) %>%
     select(-STATEA:-GISJOIN & -COUNTY)
@@ -77,39 +79,44 @@ Census_1890 <- x %>% filter(YEAR == "1890") %>%
     select_if(~ !all(is.na(.))) %>%
     select(-STATEA:-GISJOIN & -COUNTY)
 
-Census_1900 <- x %>% filter(YEAR == "1900") %>%
-    select_if(~ !all(is.na(.))) %>%
-    select(-STATEA:-GISJOIN & -COUNTY)
+# Code for the rest of the files
+# If only I could upload them all 
 
-Census_1910 <- x %>% filter(YEAR == "1910") %>%
-    select_if(~ !all(is.na(.))) %>%
-    select(-STATEA:-GISJOIN & -COUNTY)
+#Census_1900 <- x %>% filter(YEAR == "1900") %>%
+    #select_if(~ !all(is.na(.))) %>%
+    #select(-STATEA:-GISJOIN & -COUNTY)
 
-Census_1920 <- x %>% filter(YEAR == "1920") %>%
-    select_if(~ !all(is.na(.))) %>%
-    select(-STATEA:-GISJOIN & -COUNTY)
+#Census_1910 <- x %>% filter(YEAR == "1910") %>%
+    #select_if(~ !all(is.na(.))) %>%
+    #select(-STATEA:-GISJOIN & -COUNTY)
 
-Census_1930 <- x %>% filter(YEAR == "1930") %>%
-    select_if(~ !all(is.na(.))) %>%
-    select(-STATEA:-GISJOIN & -COUNTY)
+#Census_1920 <- x %>% filter(YEAR == "1920") %>%
+    #select_if(~ !all(is.na(.))) %>%
+    #select(-STATEA:-GISJOIN & -COUNTY)
 
-Census_1940 <- x %>% filter(YEAR == "1940") %>%
-    select_if(~ !all(is.na(.))) %>%
-    select(-STATEA:-GISJOIN & -COUNTY)
+#Census_1930 <- x %>% filter(YEAR == "1930") %>%
+    #select_if(~ !all(is.na(.))) %>%
+    #select(-STATEA:-GISJOIN & -COUNTY)
 
-Census_1950 <- x %>% filter(YEAR == "1950") %>%
-    select_if(~ !all(is.na(.))) %>%
-    select(-STATEA:-GISJOIN & -COUNTY)
+#Census_1940 <- x %>% filter(YEAR == "1940") %>%
+    #select_if(~ !all(is.na(.))) %>%
+    #select(-STATEA:-GISJOIN & -COUNTY)
 
-Census_1960 <- x %>% filter(YEAR == "1960") %>%
-    select_if(~ !all(is.na(.))) %>%
-    select(-STATEA:-GISJOIN & -COUNTY)
+#Census_1950 <- x %>% filter(YEAR == "1950") %>%
+    #select_if(~ !all(is.na(.))) %>%
+    #select(-STATEA:-GISJOIN & -COUNTY)
+
+#Census_1960 <- x %>% filter(YEAR == "1960") %>%
+    #select_if(~ !all(is.na(.))) %>%
+    #select(-STATEA:-GISJOIN & -COUNTY)
 
 
 
 # Combine the datasets into a vector, renaming them by only the year 
-data_sets <- c("1870" = "Census_1870", "1880" = "Census_1880", "1890" = "Census_1890", "1900" = "Census_1900", "1910" = "Census_1910", "1920" = "Census_1920",  "1930" ="Census_1930",  "1940" ="Census_1940",  "1950" ="Census_1950",  "1960" ="Census_1960")
-
+# This is the code for include all GIS files, but I had to delete most of them because they were HUGE
+# data_sets <- c("1870" = "Census_1870", "1880" = "Census_1880", "1890" = "Census_1890", "1900" = "Census_1900", "1910" = "Census_1910", "1920" = "Census_1920",  "1930" ="Census_1930",  "1940" ="Census_1940",  "1950" ="Census_1950",  "1960" ="Census_1960")
+# This is the code for the remaining files
+data_sets <- c("1870" = "Census_1870", "1880" = "Census_1880", "1890" = "Census_1890")
 
 # Read in the dataset for maps and models
 
@@ -126,7 +133,7 @@ ui <- fluidPage(
     
     # Application title
     
-    navbarPage("Agriculture and Education in the U.S.", theme = shinytheme("flatly"),
+    navbarPage("Agriculture and Education in the Midwest", theme = shinytheme("flatly"),
                
                # remember that tab panel is for what shows up in the tab, and title panel is 
                # for what shows up at the top of the page within the tab                  
@@ -137,7 +144,7 @@ ui <- fluidPage(
                         # Create a spot for the plot
                         # Why is the text on top of the image?? :(
                         mainPanel(
-                            helpText("To understand the relationship between agriculture and education, it’s helpful to elucidate trends in agriculture over time. Click the tabs below to visualize major changes."),
+                            helpText("To understand the relationship between agriculture and education, let's look at some trends in agriculture over time. Click the tabs below to visualize major changes."),
                             tabsetPanel(id = "tabsMain",
                                         tabPanel("Farms & Acreage",
                                                  
@@ -239,7 +246,7 @@ ui <- fluidPage(
                tabPanel("Maps",
                         titlePanel("Midwest Map Explorer"),
                         p("Choose a census year and up to two variables to generate and compare maps of the midwest."),
-                        helpText("Please note that maps may take up to 30 seconds to load."),
+                        helpText("Please note that maps may take up to 30 seconds to render."),
                         sidebarLayout(
                             
                             sidebarPanel(
@@ -490,7 +497,7 @@ server <- (function(input, output, session) {
         
         myvar <- input$columns
         
-        datayear <- mwData %>%
+        datayear <- x %>%
             # use get() to use the stored variable
             # idk why, but it doesn't work without this
             # the variable must be converted to a double in the original mwData dataset
@@ -584,7 +591,7 @@ server <- (function(input, output, session) {
         
         myvar <- input$columns2
         
-        datayear <- mwData %>%
+        datayear <- x %>%
             # use get() to use the stored variable
             # idk why, but it doesn't work without this
             # the variable must be converted to a double in the original mwData dataset

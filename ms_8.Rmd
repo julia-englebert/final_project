@@ -16,7 +16,7 @@ library(tidyverse)
 library(gt)
 library(devtools)
 library(tibble)
-library(foreign)
+#library(foreign)
 library(scales)
 library(shinythemes)
 library(plotly)
@@ -408,7 +408,7 @@ clean_data <- left_join(allData_inflated, inflation, by = c("YEAR" = "year")) %>
 
 # Now save as an RDS file to save on space
 
-saveRDS(clean_data, file = "final/my_data.rds")
+# saveRDS(clean_data, file = "final/my_data.rds")
 saveRDS(clean_data, file = "my_data.rds")
 saveRDS(clean_data, file = "testing123/my_data.rds")
 
@@ -471,7 +471,7 @@ mwData <- allData %>%
                    #"Percentage School Enrollment", "Urban Population", 
                    #"Percent of Population in Urban Areas", "Illiterate Population", "Illiteracy Rate")
 
-saveRDS(mwData, file = "final/mwData.rds")
+#saveRDS(mwData, file = "final/mwData.rds")
   
 ```
 
@@ -512,7 +512,7 @@ dsn1960 <- "raw-data/nhgis0003_shape/nhgis0003_shapefile_tl2008_us_county_1960"
                      layer1930, layer1940, layer1950, layer1960))
   
 
-saveRDS(shapefiles, file = "final/shapefiles.rds")
+#saveRDS(shapefiles, file = "final/shapefiles.rds")
 ```
 
 ## Output
@@ -534,7 +534,7 @@ appPlan <- mwData %>%
   select(-STATEA:-COUNTY)
 
 # myvar options will be determined by column names of appPlan & displayed via dropdown widget
-myvar <- "Irrigated Acres"
+myvar <- "Value of Farms"
 
 datayear <- mwData %>%
   # use get() to use the stored variable
@@ -588,7 +588,7 @@ leaflet(countyyear) %>%
 
 ```
 
-```{r experimentalModels, eval = FALSE}
+```{r experimentalModels, cache = TRUE}
 
 # INCORPORATE ALL OF THESE IN SHINY
 
@@ -611,7 +611,7 @@ impedu_plot <- allData %>%
   scale_x_log10(labels = comma) +
   theme_classic()
 
-ggsave("final/impedu_plot.png", plot = impedu_plot)
+#ggsave("final/impedu_plot.png", plot = impedu_plot)
 
 # See implement plot (plot2) saved as gif
 # also use cowedu model
@@ -656,7 +656,7 @@ maleedu_model <- allData %>%
                                     pull(conf.low))
          )
 
-saveRDS(maleedu_model, file = "final/maleedu_model.rds")
+#saveRDS(maleedu_model, file = "final/maleedu_model.rds")
 
 # Incorporate
 maleedu_gt <- maleedu_model %>%
@@ -684,7 +684,7 @@ maleedu_gt <- maleedu_model %>%
 
 # save the gt table as a png file so that you can use magick on it with a plot
 
-gtsave(data = maleedu_gt, filename = "final/maleedu_gt.png")
+#gtsave(data = maleedu_gt, filename = "final/maleedu_gt.png")
 
 
 # INCORPORATE
@@ -704,7 +704,7 @@ maleedu_plot <- maleedu_model %>%
        title = "Percent Male Coefficients Over Time",
        subtitle = "Measuring the effect of being male\non school enrollment")
 
-ggsave("final/maleedu_plot.png", plot = maleedu_plot)
+#ggsave("final/maleedu_plot.png", plot = maleedu_plot)
 
 
 cows_size_model <- allData %>%
@@ -713,7 +713,7 @@ cows_size_model <- allData %>%
   lm(pct_enrolled ~ cows_per_farm*avg_size, data = .) %>%
   tidy(conf.int = TRUE)
 
-saveRDS(cows_size_model, "final/cows_size_model.rds")
+#saveRDS(cows_size_model, "final/cows_size_model.rds")
 
 
 # INCORPORATE
@@ -724,7 +724,7 @@ cowedu_model <- allData %>%
   lm(pct_enrolled ~ cows_per_farm*avg_value_implements, data = .) %>%
   tidy(conf.int = TRUE) 
 
-saveRDS(cowedu_model, "final/cowedu_model.rds")
+#saveRDS(cowedu_model, "final/cowedu_model.rds")
   
 cowedu_gt <- cowedu_model %>%
   select(term, conf.low, estimate, conf.high) %>%
@@ -735,7 +735,7 @@ cowedu_gt <- cowedu_model %>%
   fmt_number(columns = vars(conf.low, estimate, conf.high), decimals = 4)
 
 
-gtsave(data = cowedu_gt, filename = "final/cowedu_gt.png")
+#gtsave(data = cowedu_gt, filename = "final/cowedu_gt.png")
 
 # cow plot
 # incorporate
@@ -756,11 +756,11 @@ cowedu_plot <- allData %>%
        y = "Percent of Population Enrolled in School") +
   theme_classic()
 
-ggsave("final/cowedu_plot.png", plot = cowedu_plot)
+#ggsave("final/cowedu_plot.png", plot = cowedu_plot)
 
 ```
 
-```{r farmTrends, eval = FALSE}
+```{r farmTrends, cache=TRUE}
 # this takes foever--cache it
 
 # INCORPORATE 
@@ -785,7 +785,7 @@ plot1a <- allData %>%
   transition_states(YEAR, wrap = FALSE) +
   shadow_mark()
 
-anim_save("final/plot1a.gif", plot1a)
+#anim_save("final/plot1a.gif", plot1a)
 
 
 plot1b_prep <- allData %>%
@@ -808,7 +808,7 @@ plot1b <- aggregate(plot1b_prep$n_farm, by = list(plot1b_prep$STATE,
     # animate
     transition_reveal(YEAR)
     
-anim_save("final/plot1b.gif", plot1b)
+#anim_save("final/plot1b.gif", plot1b)
 
 # States are gaining more implements each year
 plot2 <- allData %>%
@@ -831,7 +831,7 @@ plot2 <- allData %>%
   transition_states(YEAR, wrap = FALSE) +
   shadow_mark()
 
-anim_save("final/plot2.gif", plot2)
+#anim_save("final/plot2.gif", plot2)
 
 
 # Incorporate
@@ -856,7 +856,7 @@ plot3 <- aggregate(plot3_prep$pop, by = list(plot3_prep$STATE,
     # animate
     transition_reveal(YEAR)
     
-anim_save("final/plot3.gif", plot3)
+#anim_save("final/plot3.gif", plot3)
 
 
 # Urbanization plot
@@ -875,38 +875,42 @@ plot4_prepc <- aggregate(plot4_prep$urban_pop, by = list(plot4_prep$YEAR),
                    FUN=sum) %>% 
   mutate(YEAR = Group.1, n_urban_pop = x)
 
-plot4_prepd <- full_join(plot4_prepb, plot4_prepc, by = c("YEAR")) %>%
-  select(YEAR, n_pop, n_urban_pop) %>%
-  mutate(YEAR = as.factor(YEAR)) %>%
+# I was having trouble with the foreign package, so I commented out all code that requires it
+
+#plot4_prepd <- full_join(plot4_prepb, plot4_prepc, by = c("YEAR")) %>%
+  #select(YEAR, n_pop, n_urban_pop) %>%
+  #mutate(YEAR = as.factor(YEAR)) %>%
   # convert to long format
-  melt(id="YEAR")
+  #melt(id="YEAR")
 
 limits4 <- c("1", "2", "3", "4", "5", "6", "7")
 labels4 <- c("1870", "1880", "1890", "1910", "1920", "1930", "1950")
 
-plot4 <- as_tibble(plot4_prepd) %>%
+#plot4 <- as_tibble(plot4_prepd) %>%
   # as.numeric is changing years to numbers 1:7
-  mutate(YEAR = as.numeric(YEAR), variable = as.character(variable), 
-         value = value/1000) %>%
-  ggplot(aes(YEAR, value, color = variable)) +
-  geom_line() +
-  scale_x_discrete(limits = limits4, labels = labels4) +
-  scale_fill_viridis_d(aesthetics = "color", breaks=c("n_urban_pop", "n_pop"), labels = c("Urban", "Rural")) +
-  labs(x = "Year",
-       y = "Population (in thousands)",
-       title = "Midwest Urbanization",
-       subtitle = "Rural and urban populations over Time",
-       color = "") +
-  theme_classic() +
-  geom_point(aes(group = seq_along(YEAR))) +
-  transition_reveal(YEAR)
+  #mutate(YEAR = as.numeric(YEAR), variable = as.character(variable), 
+         #value = value/1000) %>%
+  #ggplot(aes(YEAR, value, color = variable)) +
+  #geom_line() +
+  #scale_x_discrete(limits = limits4, labels = labels4) +
+  #scale_fill_viridis_d(aesthetics = "color", breaks=c("n_urban_pop", "n_pop"), labels = c("Urban", "Rural")) +
+  #labs(x = "Year",
+       #y = "Population (in thousands)",
+       #title = "Midwest Urbanization",
+       #subtitle = "Rural and urban populations over Time",
+       #color = "") +
+  #theme_classic() +
+  #geom_point(aes(group = seq_along(YEAR))) +
+  #transition_reveal(YEAR)
     
-anim_save("final/plot4.gif", plot4)
+#anim_save("final/plot4.gif", plot4)
 ```
 
+# magick code
 
 ```{r magick}
 
+```
 # Combined plots using magick
 
 # Farmland acreage & number of farms plots
@@ -935,1400 +939,4 @@ for(i in 2:100){
 }
 
 anim_save("final/pop_gif.gif", pop_gif)
-
-
-
-```
-
-
-### SHINY FINAL
-```{r shiny, eval=FALSE}
-
-# This works
-
-library(shiny)
-library(haven)
-library(tidyverse)
-library(gt)
-library(devtools)
-library(tibble)
-library(foreign)
-library(scales)
-library(shinythemes)
-library(plotly)
-library(leaflet)
-library(broom)
-
-# packages for mapping
-library(leaflet)
-library(spdplyr)
-library(rmapshaper)
-library(sf)
-
-
-
-# Prep the shapefiles
-# Now save the gis data with short names for sake of the shiny app
-# hopefully this will work...
-
-dsn1870 <- "raw-data/nhgis0002_shape/nhgis0002_shapefile_tl2008_us_county_1870"
-layer1870 <- "US_county_1870_conflated"
-dsn1880 <- "raw-data/nhgis0002_shape/nhgis0002_shapefile_tl2008_us_county_1880"
-layer1880 <- "US_county_1880_conflated"
-dsn1890 <- "raw-data/nhgis0002_shape/nhgis0002_shapefile_tl2008_us_county_1890"
-layer1890 <- "US_county_1890_conflated"
-dsn1900 <- "raw-data/nhgis0003_shape/nhgis0003_shapefile_tl2008_us_county_1900"
-layer1900 <- "US_county_1900_conflated"
-dsn1910 <- "raw-data/nhgis0003_shape/nhgis0003_shapefile_tl2008_us_county_1910"
-layer1910 <- "US_county_1910_conflated"
-dsn1920 <- "raw-data/nhgis0003_shape/nhgis0003_shapefile_tl2008_us_county_1920"
-layer1920 <- "US_county_1920_conflated"
-dsn1930 <- "raw-data/nhgis0003_shape/nhgis0003_shapefile_tl2008_us_county_1930"
-layer1930 <- "US_county_1930_conflated"
-dsn1940 <- "raw-data/nhgis0003_shape/nhgis0003_shapefile_tl2008_us_county_1940"
-layer1940 <- "US_county_1940_conflated"
-dsn1950 <- "raw-data/nhgis0003_shape/nhgis0003_shapefile_tl2008_us_county_1950"
-layer1950 <- "US_county_1950_conflated"
-dsn1960 <- "raw-data/nhgis0003_shape/nhgis0003_shapefile_tl2008_us_county_1960"
-layer1960 <- "US_county_1960_conflated"
-
-# Make a tibble of all the shapefiles that you'll need
-shapefiles <- tibble(Year = c(1870, 1880, 1890, 1900, 1910, 1920, 1930, 1940, 1950, 1960), 
-                     Dsn = c(dsn1870, dsn1880, dsn1890, dsn1900, dsn1910, dsn1920, dsn1930, 
-                             dsn1940, dsn1950, dsn1960),
-                     Layer = c(layer1870, layer1880, layer1890, layer1900, layer1910, layer1920, 
-                               layer1930, layer1940, layer1950, layer1960))
-
-x <- readRDS("my_data.rds") %>%
-    mutate("Value of Farms" = as.numeric(value_farm), "Average Farm Value" = as.numeric(avg_value_farm), 
-           "Value of Implements" = as.numeric(value_implements), 
-           "Average Implement Value" = as.numeric(avg_value_implements), 
-           "Average Farm Size" = as.numeric(avg_size), "Number of Farms" = as.numeric(n_farm), 
-           "Acres of Farmland" = as.numeric(acres_farms), "Irrigated Acres" = as.numeric(acres_irrigated), 
-           "Percentage of Farmland Irrigated" = as.numeric(pct_irrigated), "Number of Cows" = as.numeric(cows),
-           "Number of Cows per Farm" = as.numeric(cows_per_farm), "Number of Horses" = as.numeric(horses), 
-           "Total Population" = as.numeric(pop), "Male Population" = as.numeric(male), 
-           "Female Population" = as.numeric(female), "Male Percentage of Population" = as.numeric(pct_male),
-           "Total School Enrollment" = as.numeric(enrolled), 
-           "Percentage School Enrollment" = as.numeric(pct_enrolled), 
-           "Urban Population" = as.numeric(urban_pop), 
-           "Percent of Population in Urban Areas" = as.numeric(pct_urban), 
-           "Illiterate Population" = as.numeric(illiterate), 
-           "Illiteracy Rate" = as.numeric(pct_illiterate)) %>%
-    select(STATEA, COUNTYA, GISJOIN, YEAR, STATE, COUNTY, 
-           "Value of Farms", "Average Farm Value", "Value of Implements", "Average Implement Value",
-           "Average Farm Size", "Number of Farms", "Acres of Farmland", "Irrigated Acres", 
-           "Percentage of Farmland Irrigated", "Number of Cows", "Number of Cows per Farm", 
-           "Number of Horses", "Total Population", "Male Population", "Female Population", 
-           "Male Percentage of Population", "Total School Enrollment", 
-           "Percentage School Enrollment", "Urban Population", 
-           "Percent of Population in Urban Areas", "Illiterate Population", "Illiteracy Rate")
-
-# Now subset by year
-# Really should have saved these as Rds files. Will do that later
-Census_1870 <- x %>% filter(YEAR == "1870") %>%
-    select_if(~ !all(is.na(.))) %>%
-    select(-STATEA:-GISJOIN & -COUNTY)
-
-Census_1880 <- x %>% filter(YEAR == "1880") %>%
-    select_if(~ !all(is.na(.))) %>%
-    select(-STATEA:-GISJOIN & -COUNTY)
-
-Census_1890 <- x %>% filter(YEAR == "1890") %>%
-    select_if(~ !all(is.na(.))) %>%
-    select(-STATEA:-GISJOIN & -COUNTY)
-
-Census_1900 <- x %>% filter(YEAR == "1900") %>%
-    select_if(~ !all(is.na(.))) %>%
-    select(-STATEA:-GISJOIN & -COUNTY)
-
-Census_1910 <- x %>% filter(YEAR == "1910") %>%
-    select_if(~ !all(is.na(.))) %>%
-    select(-STATEA:-GISJOIN & -COUNTY)
-
-Census_1920 <- x %>% filter(YEAR == "1920") %>%
-    select_if(~ !all(is.na(.))) %>%
-    select(-STATEA:-GISJOIN & -COUNTY)
-
-Census_1930 <- x %>% filter(YEAR == "1930") %>%
-    select_if(~ !all(is.na(.))) %>%
-    select(-STATEA:-GISJOIN & -COUNTY)
-
-Census_1940 <- x %>% filter(YEAR == "1940") %>%
-    select_if(~ !all(is.na(.))) %>%
-    select(-STATEA:-GISJOIN & -COUNTY)
-
-Census_1950 <- x %>% filter(YEAR == "1950") %>%
-    select_if(~ !all(is.na(.))) %>%
-    select(-STATEA:-GISJOIN & -COUNTY)
-
-Census_1960 <- x %>% filter(YEAR == "1960") %>%
-    select_if(~ !all(is.na(.))) %>%
-    select(-STATEA:-GISJOIN & -COUNTY)
-
-data_sets <- c("Census_1870", "Census_1880", "Census_1890", "Census_1900", "Census_1910", "Census_1920", "Census_1930", "Census_1940", "Census_1950", "Census_1960")
-
-
-# Everything above this line should be condensed
-#####################
-
-
-allData <- readRDS("my_data.rds")
-
-
-# Input
-
-ui <- fluidPage(
-    
-    # flatly is a nice theme to make the tabs look put together
-    
-    # Application title
-    
-    navbarPage("Agriculture and Education in the U.S.", theme = shinytheme("flatly"),
-               
-               # remember that tab panel is for what shows up in the tab, and title panel is 
-               # for what shows up at the top of the page within the tab                  
-               
-               tabPanel("Intro to Midwestern Agriculture",
-                        
-                        # Give the page a title
-                        titlePanel("Relationship Between Farm Value and Education, by County"),
-                        
-                        # Generate a row with a sidebar
-                        sidebarLayout(      
-                            
-                            # Define the sidebar with one input
-                            # comprehensive options:
-                            # c("1870" = "1870", "1880" = "1880", "1890" = "1890", "1900" = "1900","1910" = "1910", "1920" = "1920", "1930" = "1930", "1940" = "1940", "1950" = "1950", "1960" = "1960")
-                            sidebarPanel(
-                                selectInput("Year", "Year:", 
-                                            choices=c("1870" = "1870", "1890" = "1890", "1910" = "1910"), 
-                                            multiple = TRUE)),
-                            helpText("From Great Plains Population and Environment Survey Agricultural and Social & Demographic Data.")
-                        ),
-                        
-                        # Create a spot for the plot
-                        mainPanel(
-                            tabsetPanel(id = "tabsMain",
-                                        tabPanel("Plot",
-                                                 
-                                                 # this tells the UI what plot to put 
-                                                 
-                                                 plotOutput("agPlot")  
-                                        )))),
-               tabPanel("Models",
-                        
-                        # Give the page a title
-                        titlePanel("Relationship Between Farm Value and Education, by County"),
-                        p("Make some models! (See notes)"),
-                        gt_output("model1")
-               ),
-               
-               
-               tabPanel("Maps",
-                        titlePanel("Midwest Map Explorer"),
-                        p("For best results, view in fullscreen mode."),
-                        p("Maps may take up to 30 seconds to load...but they're worth it!"),
-                   mainPanel(
-                         tabsetPanel(id = "tabsMain",
-                                                     tabPanel("Map",
-                                                              pageWithSidebar(
-                                                                  
-                                                                  headerPanel(""),
-                                                                  
-                                                                  sidebarPanel(
-                                                                      uiOutput("choose_dataset"),
-                                                                      
-                                                                      uiOutput("choose_columns"),
-                                                                      br(),
-                                                                  ),
-                                         mainPanel(leafletOutput("map1"))
-                                     )),
-                                     tabPanel("Interesting Observations",
-                                              # Don't write in the first p()
-                                              # Looks bad
-                                              p(""),
-                                              p("Write some stuff!")))
-                                 )),
-               
-               tabPanel("About",
-                        
-                        # Give the page a title
-                        titlePanel("About this project"),
-                        p("My name is Julia Englebert. I am a senior at Harvard College studying Near Eastern Languages and Civilizations with a secondary field in Ethnicity, Migration, and Rights. Some of my academic interests include the history and future of Midwestern agriculture, and the role of data science in shaping social policy."),
-                        br(),
-                        p("This project uses historical census and American Community Survey (ACS) data to explore correlations between agriculture and education in the Midwestern United States. By joining the two datasets, the former containing agricultural data and the later containing demographic data, I was able to look at the impact of farming, land value, crop value, and more on education in Midwestern communities over the course of a century. I chose this particular time range in part because of the data that was available to me, and in part due to the economic, industrial, and education policy changes that ocurred from 1870 to 1960. My data is sourced from the IPUMS National Historical Geographic Information System (NHGIS) at nhgis.org. IPUMS provides census data from around the world, but my project focuses specifically on the United States from 1870 to 1960. All datasets and gis files used for this project can be downloaded from the NHGIS Data Finder:"),
-                        p(a(href="https://data2.nhgis.org/main", "NHGIS Data Finder")),
-                        br(),
-                        p("To see more of my work, please visit my Github account:"),
-                        p(a(href="https://github.com/julia-englebert", "Julia Englebert")),
-                        br(),
-                        titlePanel("Citations"),
-                        p("Steven Manson, Jonathan Schroeder, David Van Riper, and Steven Ruggles. IPUMS National Historical Geographic Information System: Version 14.0 [Database]. Minneapolis, MN: IPUMS. 2019. http://doi.org/10.18128/D050.V14.0"),
-                        p("The College of William and Mary and the Minnesota Population Center. School Attendance Boundary Information System (SABINS): Version 1.0. Minneapolis, MN: University of Minnesota 2011.")
-               )
-               )
-    )
-
-
-
-# use plotly to allow hover text to appear on plots, giving more info about the point
-
-server <- (function(input, output, session) {
-    
-    # Fill in the spot we created for a plot
-    output$agPlot <- renderPlot({
-        
-        # Render a plot
-        allData %>%
-            filter(YEAR %in% input$Year) %>%
-            mutate(YEAR = as.factor(YEAR)) %>%
-            group_by(YEAR) %>%
-            ggplot(aes(x = cows_per_farm, y = pct_enrolled, color = YEAR)) +
-            geom_point(alpha = 0.1) +
-            geom_smooth(method = "lm", se = FALSE) +
-            scale_color_viridis_d() +
-            ylim(0, 45) +
-            scale_x_log10(labels = comma) +
-            labs(title = "Cows and Education",
-                 subtitle = "Relationship between the number of cows per farm\nand school enrollment, by county",
-                 x = "Average Cows per Farm",
-                 y = "Percent of Population Enrolled in School") +
-            theme_classic()
-    })
-    
-    output$choose_dataset <- renderUI({
-        selectInput("dataset", "Choose Census Year:", as.list(data_sets))
-    })
-    
-    # Check boxes
-    output$choose_columns <- renderUI({
-        # If missing input, return to avoid error later in function
-        if(is.null(input$dataset))
-            return()
-        
-        # Get the data set with the appropriate name
-        dat <- get(input$dataset)
-        
-        # Get rid of "YEAR" and "STATE" so that users don't pick them and make senseless maps
-        
-        colnames1 <- names(dat)
-        colnames <- colnames1[!colnames1 %in% "YEAR" & !colnames1 %in% "STATE"]
-        
-        # Create the dropdown menu and select all columns by default
-        selectInput("columns", "Choose Variable:", 
-                    choices  = colnames)
-    })
-    
-    
-    # Map output
-    output$map1 <- renderLeaflet({
-        # If missing input, return to avoid error later in function
-        if(is.null(input$dataset))
-            return()
-        
-        # Get the data set
-        dat <- get(input$dataset)
-        
-        # Make sure columns are correct for data set (when data set changes, the
-        # columns will initially be for the previous data set)
-        if (is.null(input$columns) || !(input$columns %in% names(dat)))
-            return()
-        
-        year <- dat %>% slice(1) %>% pull(YEAR)
-        
-        # Keep the selected columns
-        dat <- dat[, input$columns, drop = FALSE]
-        
-        myvar <- input$columns
-        
-        datayear <- mwData %>%
-            # use get() to use the stored variable
-            # idk why, but it doesn't work without this
-            # the variable must be converted to a double in the original mwData dataset
-            mutate(myvariable = (get(myvar))) %>%
-            filter(YEAR == year, myvariable > 0) %>%
-            select(GISJOIN, myvariable)
-        
-        # Import Census Tract Shapefile into R as SpatialPolygonsDataFrameFormat (SP Dataframe)
-        # dsn is location of folder which contains shapefiles, (.proj, .shp etc.)
-        # layer is the filename of the .shp file inside the
-        # folder dsn points to. 
-        
-        dsnyear <- shapefiles %>% 
-            filter(Year == year) %>% 
-            pull(Dsn)
-        layeryear <- shapefiles %>% 
-            filter(Year == year) %>% 
-            pull(Layer)
-        
-        countyyear <- sf::st_read(dsn = dsnyear,
-                                  layer = layeryear)
-        
-        countyyear <-
-            countyyear %>%
-            merge(datayear, "GISJOIN")
-        
-        
-        # Set projection of tracts dataset to `projection` required by leaflet
-        
-        countyyear <- sf::st_transform(countyyear, crs="+init=epsg:4326")
-        
-        # Condense size of data for faster processing
-        
-        countyyear <- rmapshaper::ms_simplify(countyyear)
-        
-        # Set palette color
-        
-        pal <- colorNumeric("viridis", NULL)
-        
-        #  Plot the data
-        
-        # use shiny to add a title, which will be be equivalent to myvar
-        
-        leaflet(countyyear) %>%
-            addTiles() %>%
-            addPolygons(stroke = FALSE, smoothFactor = 0.3, fillOpacity = 1,
-                        fillColor = ~pal(myvariable)) %>%
-            addLegend(pal = pal, values = ~myvariable, opacity = 1.0, title = myvar)
-        
-    })
-    
-    output$model1 <- render_gt({
-        
-        # experimental model
-        
-        model1
-        
-    })
-})
-
-
-
-# Run the application 
-
-shinyApp(ui = ui, server = server)
-
-
-```
-
-
-
-
-
-# Ignore
-
-```{r ignore, eval=FALSE}
-data1870a <- as_tibble(read.csv("raw-data/nhgis0002_csv/nhgis0002_ds16_1870_county.csv")) %>%
-  mutate(GISJOIN = as.character(GISJOIN), STATE = as.character(STATE), COUNTY = as.character(COUNTY), 
-         AREANAME = as.character(AREANAME))
-
-data1870b <- as_tibble(read.csv("raw-data/nhgis0002_csv/nhgis0002_ds17_1870_county.csv")) %>%
-  mutate(GISJOIN = as.character(GISJOIN), STATE = as.character(STATE), COUNTY = as.character(COUNTY), 
-         AREANAME = as.character(AREANAME))
-
-# Join the two datasets by STATEA and COUNTYA, which are the state and county codes
-
-data1870j <- full_join(data1870a, data1870b, by = c("STATEA", "COUNTYA")) %>%
-  
-  # Mutate to get rid of the .x suffix on variables
-  
-  mutate(GISJOIN = GISJOIN.x, YEAR = YEAR.x, STATE = STATE.x, COUNTY = COUNTY.x) %>%
-  
-  # Mutate to rename varialbes of interest to uniform, comprehensible names
-  # Some existing varialbes are combined to create the desired variables
-  # See codebook
-  
-  mutate(value_farm = AJV001, n_farm = AJS001, cows =  AJ0003+AJ0005, horses = AJ0001, 
-         avg_size = (AJT001*2 + AJT002*6 + AJT003*15 + AJT004*35 + AJT005*75 + AJT006*300 + AJT007*750 + 
-                       AJT008*1200)/AKP001, value_implements = AKL001, pop = AJ3001, male = AKD001, 
-         female = AKD002, enrolled = ALG001, urban_pop = AKE001, pct_urban = AKE001/AJ3001*100, 
-         illiterate = AJ7001, acres_farms = AJU001+ AJU002+AJU003, 
-         
-         # Even though irrigation data doesn't exist for this year, I'm filling the columns in with NA
-         # Later years will have irrigation data
-         
-         acres_irrigated = NA, pct_irrigated = NA) %>%
-  
-  # Mutate again to make new variables out of the ones you just created in the last mutate
-  
-  mutate(cows_per_person = cows/n_farm, pct_enrolled = enrolled/pop*100, pct_illiterate = illiterate/pop*100) %>%
-  
-  # Select the desired variables
-  
-  select(STATEA, COUNTYA, GISJOIN, YEAR, STATE, COUNTY, value_farm, value_implements, avg_size, n_farm,
-         acres_farms, acres_irrigated, pct_irrigated, cows, cows_per_person, horses, pop, male, female,
-         enrolled, pct_enrolled, urban_pop, pct_urban, illiterate, pct_illiterate)
-
-# Now the dataset is much more manageable!
-
-# Start on the next year, 1880, repeating the exact same process
-# Lots of NA values due to scant data this year
-
-data1880a <- as_tibble(read.csv("raw-data/nhgis0002_csv/nhgis0002_ds22_1880_county.csv")) %>%
-  mutate(GISJOIN = as.character(GISJOIN), STATE = as.character(STATE), COUNTY = as.character(COUNTY), 
-         AREANAME = as.character(AREANAME))
-
-data1880b <- as_tibble(read.csv("raw-data/nhgis0002_csv/nhgis0002_ds23_1880_county.csv")) %>%
-  mutate(GISJOIN = as.character(GISJOIN), STATE = as.character(STATE), COUNTY = as.character(COUNTY), 
-         AREANAME = as.character(AREANAME))
-
-data1880j <- full_join(data1880a, data1880b, by = c("STATEA", "COUNTYA")) %>%
-  mutate(GISJOIN = GISJOIN.x, YEAR = YEAR.x, STATE = STATE.x, COUNTY = COUNTY.x) %>%
-  mutate(value_farm = APN001+APO001+APQ001, n_farm = AOQ001, cows =  AOG004+AOG005, horses = AOG001, value_implements = APO001, pop = AOT001, male = AP1001, female = AP1002, 
-         enrolled = NA, urban_pop = AO4001, pct_urban = AO4001/AOT001*100, illiterate = NA, 
-         acres_farms = AOR001, acres_irrigated = NA, pct_irrigated = NA) %>%
-  mutate(avg_size = acres_farms/n_farm, cows_per_person = cows/n_farm, pct_enrolled = enrolled/pop*100, pct_illiterate = illiterate/pop*100) %>%
-  select(STATEA, COUNTYA, GISJOIN, YEAR, STATE, COUNTY, value_farm, value_implements, avg_size, n_farm, 
-         acres_farms, acres_irrigated, pct_irrigated, cows, cows_per_person, horses, pop, male, female, 
-         enrolled, pct_enrolled, urban_pop, pct_urban, illiterate, pct_illiterate)
-
-# Start on 1890 data
-
-data1890a <- as_tibble(read.csv("raw-data/nhgis0002_csv/nhgis0002_ds26_1890_county.csv")) %>%
-  mutate(GISJOIN = as.character(GISJOIN), STATE = as.character(STATE), COUNTY = as.character(COUNTY), 
-         AREANAME = as.character(AREANAME))
-
-data1890b <- as_tibble(read.csv("raw-data/nhgis0002_csv/nhgis0002_ds27_1890_county.csv")) %>%
-  mutate(GISJOIN = as.character(GISJOIN), STATE = as.character(STATE), COUNTY = as.character(COUNTY), 
-         AREANAME = as.character(AREANAME))
-
-data1890j <- full_join(data1890a, data1890b, by = c("STATEA", "COUNTYA")) %>%
-  mutate(GISJOIN = GISJOIN.x, YEAR = YEAR.x, STATE = STATE.x, COUNTY = COUNTY.x) %>%
-  mutate(value_farm = AUK001+AUK002+AUK003, n_farm = AS9001, cows = ASY002, horses = ASY003, value_implements = AUK002, pop = AUM001, male = AV0001+AV0003+AV0005+AV0007, 
-         female = AV0002+AV0004+AV0006+AV0008, enrolled = AVK005+AVK006+AVK007+AVK008, urban_pop = AUU001, 
-         pct_urban = AUU001/AUM001*100, illiterate = NA, acres_farms = AUJ001+AUJ002, 
-         acres_irrigated = AT2001, pct_irrigated = AT2001/(AUJ001+AUJ002)*100) %>%
-  mutate(avg_size = acres_farms/n_farm, cows_per_person = cows/n_farm, pct_enrolled = enrolled/pop*100, pct_illiterate = illiterate/pop*100) %>%
-  select(STATEA, COUNTYA, GISJOIN, YEAR, STATE, COUNTY, value_farm, value_implements, avg_size, n_farm, 
-         acres_farms, acres_irrigated, pct_irrigated, cows, cows_per_person, horses, pop, male, female, 
-         enrolled, pct_enrolled, urban_pop, pct_urban, illiterate, pct_illiterate)
-
-# Before I mutated all of the data, running this code showed that all .x values are the same 
-# as all .y values, so it was safe to eliminate the double columns as long as "problems" returned 0
-# And it did!
-  
-#problems <- bind_rows(data1870j, data1880j, data1890j) %>% 
-  #select(STATEA, COUNTYA, GISJOIN.x, GISJOIN.y, YEAR.x, YEAR.y, STATE.x, STATE.y, 
-         #COUNTY.x, COUNTY.y, AREANAME.x, AREANAME.y) %>%
-  #mutate(same = ifelse(GISJOIN.x == GISJOIN.y & YEAR.x == YEAR.y & STATE.x == STATE.y & 
-                         #COUNTY.x == COUNTY.y & AREANAME.x == AREANAME.y, TRUE, FALSE)) %>%
-  #filter(same == "FALSE") %>%
-  #nrow()
-
-
-
-# Read in the 1900s data
-
-# Only do decennial census data
-# Intermittent years only have AF12001: estimated population
-
-# 1900
-
-data1900a <- as_tibble(read.csv("raw-data/nhgis0003_csv/nhgis0003_ds30_1900_county.csv")) %>%
-  mutate(GISJOIN = as.character(GISJOIN), STATE = as.character(STATE), COUNTY = as.character(COUNTY), 
-         AREANAME = as.character(AREANAME))
-
-data1900b <- as_tibble(read.csv("raw-data/nhgis0003_csv/nhgis0003_ds31_1900_county.csv")) %>%
-  mutate(GISJOIN = as.character(GISJOIN), STATE = as.character(STATE), COUNTY = as.character(COUNTY), 
-         AREANAME = as.character(AREANAME))
-
-data1900j <- full_join(data1900a, data1900b, by = c("STATEA", "COUNTYA")) %>%
-  mutate(GISJOIN = GISJOIN.x, YEAR = YEAR.x, STATE = STATE.x, COUNTY = COUNTY.x) %>%
-  mutate(value_farm = AWV001, n_farm = AW3001, cows = AW7001, horses = AW7002, value_implements = AWW003, pop = AWS001, male = AZ0001,female = AZ0001, 
-         enrolled = NA, urban_pop = NA, pct_urban = NA, illiterate = AYS001+AYS002+AYS003+AYS004+AYS005, 
-         acres_farms = AWT001, acres_irrigated = AX8001, pct_irrigated = AX8001/AWT001*100) %>%
-  mutate(avg_size = acres_farms/n_farm, cows_per_person = cows/n_farm, pct_enrolled = enrolled/pop*100, pct_illiterate = illiterate/pop*100) %>%
-  select(STATEA, COUNTYA, GISJOIN, YEAR, STATE, COUNTY, value_farm, value_implements, avg_size, n_farm, 
-         acres_farms, acres_irrigated, pct_irrigated, cows, cows_per_person, horses, pop, male, female, 
-         enrolled, pct_enrolled, urban_pop, pct_urban, illiterate, pct_illiterate)
-
-# 1910
-
-data1910a <- as_tibble(read.csv("raw-data/nhgis0003_csv/nhgis0003_ds36_1910_county.csv")) %>%
-  mutate(GISJOIN = as.character(GISJOIN), STATE = as.character(STATE), COUNTY = as.character(COUNTY), 
-         AREANAME = as.character(AREANAME))
-
-data1910b <- as_tibble(read.csv("raw-data/nhgis0003_csv/nhgis0003_ds37_1910_county.csv")) %>%
-  mutate(GISJOIN = as.character(GISJOIN), STATE = as.character(STATE), COUNTY = as.character(COUNTY), 
-         AREANAME = as.character(AREANAME))
-
-data1910j <- full_join(data1910a, data1910b, by = c("STATEA", "COUNTYA")) %>%
-  mutate(GISJOIN = GISJOIN.x, YEAR = YEAR.x, STATE = STATE.x, COUNTY = COUNTY.x) %>%
-  mutate(value_farm = A0F001, n_farm = A1H001, cows = A1F001+A1F002, horses = NA, 
-         avg_size = A21001/A1H001, value_implements = A0Q005, pop = A0E001, male = NA, female = NA, 
-         enrolled = A4F001, urban_pop = A36001, pct_urban = A36001/A0E001*100, illiterate = A38001, 
-         acres_farms = A21001, acres_irrigated = A0G001, pct_irrigated = A0G001/A21001*100) %>%
-  mutate(cows_per_person = cows/n_farm, pct_enrolled = enrolled/pop*100, pct_illiterate = illiterate/pop*100) %>%
-  select(STATEA, COUNTYA, GISJOIN, YEAR, STATE, COUNTY, value_farm, value_implements, avg_size, n_farm, 
-         acres_farms, acres_irrigated, pct_irrigated, cows, cows_per_person, horses, pop, male, female, 
-         enrolled, pct_enrolled, urban_pop, pct_urban, illiterate, pct_illiterate)
-
-#1920
-  
-data1920a <- as_tibble(read.csv("raw-data/nhgis0003_csv/nhgis0003_ds43_1920_county.csv")) %>%
-  mutate(GISJOIN = as.character(GISJOIN), STATE = as.character(STATE), COUNTY = as.character(COUNTY), 
-         AREANAME =  as.character(AREANAME))
-
-data1920b <- as_tibble(read.csv("raw-data/nhgis0003_csv/nhgis0003_ds224_1920_county.csv")) %>%
-  mutate(GISJOIN = as.character(GISJOIN), STATE = as.character(STATE), COUNTY = as.character(COUNTY), 
-         AREANAME = as.character(AREANAME))
-
-data1920c <- as_tibble(read.csv("raw-data/nhgis0003_csv/nhgis0003_ds210_1920_county.csv")) %>%
-  mutate(GISJOIN = as.character(GISJOIN), STATE = as.character(STATE), COUNTY = as.character(COUNTY), 
-         AREANAME = as.character(AREANAME))
-
-data1920j <- full_join(data1920a, data1920b, by = c("STATEA", "COUNTYA"))
-data1920j <- full_join(data1920j, data1920c, by = c("STATEA", "COUNTYA"))
-data1920j <- data1920j %>%
-  mutate(GISJOIN = GISJOIN.x, YEAR = YEAR.x, STATE = STATE.x, COUNTY = COUNTY.x) %>%
-  mutate(value_farm = A8P001+A8P002+A8P003+A8P004, n_farm = AB3P001, cows = NA, horses = NA, 
-         avg_size = AB3T001/AB3P001, value_implements = A8P003, pop = A81001, male = A8B001, 
-         female = A8B002, enrolled = A7N001+A7N002+A7N003+A7N004, urban_pop = A80001, 
-         pct_urban = A80001/A81001*100, illiterate = A7U001, acres_farms = AB3T001, 
-         acres_irrigated = AB6L001, pct_irrigated = AB6L002/AB3T001*100) %>%
-  mutate(cows_per_person = cows/n_farm, pct_enrolled = enrolled/pop*100, pct_illiterate = illiterate/pop*100) %>%
-  select(STATEA, COUNTYA, GISJOIN, YEAR, STATE, COUNTY, value_farm, value_implements, avg_size, n_farm, 
-         acres_farms, acres_irrigated, pct_irrigated, cows, cows_per_person, horses, pop, male, female, 
-         enrolled, pct_enrolled, urban_pop, pct_urban, illiterate, pct_illiterate)
-
-#1930
-# 1930 has more datasets available than previous years
-
-data1930a <- as_tibble(read.csv("raw-data/nhgis0003_csv/nhgis0003_ds212_1930_county.csv")) %>%
-  mutate(GISJOIN = as.character(GISJOIN), STATE = as.character(STATE), COUNTY = as.character(COUNTY), 
-         AREANAME = as.character(AREANAME))
-
-data1930b <- as_tibble(read.csv("raw-data/nhgis0003_csv/nhgis0003_ds224_1930_county.csv")) %>%
-  mutate(GISJOIN = as.character(GISJOIN), STATE = as.character(STATE), COUNTY = as.character(COUNTY), 
-         AREANAME = as.character(AREANAME))
-
-data1930c <- as_tibble(read.csv("raw-data/nhgis0003_csv/nhgis0003_ds52_1930_county.csv")) %>%
-  mutate(GISJOIN = as.character(GISJOIN), STATE = as.character(STATE), COUNTY = as.character(COUNTY), 
-         AREANAME = as.character(AREANAME))
-
-data1930d <- as_tibble(read.csv("raw-data/nhgis0003_csv/nhgis0003_ds53_1930_county.csv")) %>%
-  mutate(GISJOIN = as.character(GISJOIN), STATE = as.character(STATE), COUNTY = as.character(COUNTY), 
-         AREANAME = as.character(AREANAME))
-
-data1930e <- as_tibble(read.csv("raw-data/nhgis0003_csv/nhgis0003_ds54_1930_county.csv")) %>%
-  mutate(GISJOIN = as.character(GISJOIN), STATE = as.character(STATE), COUNTY = as.character(COUNTY), 
-         AREANAME = as.character(AREANAME))
-
-data1930f <- as_tibble(read.csv("raw-data/nhgis0003_csv/nhgis0003_ds55_1930_county.csv")) %>%
-  mutate(GISJOIN = as.character(GISJOIN), STATE = as.character(STATE), COUNTY = as.character(COUNTY), 
-         AREANAME = as.character(AREANAME))
-
-data1930j <- full_join(data1930a, data1930b, by = c("STATEA", "COUNTYA"))
-data1930j <- full_join(data1930j, data1930c, by = c("STATEA", "COUNTYA"))
-data1930j <- full_join(data1930j, data1930d, by = c("STATEA", "COUNTYA"))
-data1930j <- full_join(data1930j, data1930e, by = c("STATEA", "COUNTYA"))
-data1930j <- full_join(data1930j, data1930f, by = c("STATEA", "COUNTYA"))
-
-data1930j <- data1930j %>%
-  mutate(GISJOIN = GISJOIN.x, YEAR = YEAR.x, STATE = STATE.x, COUNTY = COUNTY.x) %>%
-  mutate(value_farm = BFD001+BFD002+BFD004+ACEO001, n_farm = AB95001, cows = NA, horses = NA, value_implements = BFD004, pop = BCX001, male = BC3001, 
-         female = BC3002, enrolled = BDT001+BDT002+BDT003+BDT004, urban_pop = BDX001, 
-         pct_urban = BDX001/BDP001*100, illiterate = BDV001, acres_farms = AB98001, 
-         acres_irrigated = ACEX002, pct_irrigated = ACEX002/AB98001*100) %>%
-  mutate(avg_size = acres_farms/n_farm, cows_per_person = cows/n_farm, pct_enrolled = enrolled/pop*100, pct_illiterate = illiterate/pop*100) %>%
-  select(STATEA, COUNTYA, GISJOIN, YEAR, STATE, COUNTY, value_farm, value_implements, avg_size, n_farm, 
-         acres_farms, acres_irrigated, pct_irrigated, cows, cows_per_person, horses, pop, male, female, 
-         enrolled, pct_enrolled, urban_pop, pct_urban, illiterate, pct_illiterate)
-
-# 1940
-
-data1940a <- as_tibble(read.csv("raw-data/nhgis0003_csv/nhgis0003_ds224_1940_county.csv")) %>%
-  mutate(GISJOIN = as.character(GISJOIN), STATE = as.character(STATE), COUNTY = as.character(COUNTY), 
-         AREANAME = as.character(AREANAME))
-
-data1940b <- as_tibble(read.csv("raw-data/nhgis0003_csv/nhgis0003_ds77_1940_county.csv")) %>%
-  mutate(GISJOIN = as.character(GISJOIN), STATE = as.character(STATE), COUNTY = as.character(COUNTY), 
-         AREANAME = as.character(AREANAME))
-
-data1940c <- as_tibble(read.csv("raw-data/nhgis0003_csv/nhgis0003_ds78_1940_county.csv")) %>%
-  mutate(GISJOIN = as.character(GISJOIN), STATE = as.character(STATE), COUNTY = as.character(COUNTY), 
-         AREANAME = as.character(AREANAME))
-
-data1940j <- full_join(data1940a, data1940b, by = c("STATEA", "COUNTYA"))
-data1940j <- full_join(data1940j, data1940c, by = c("STATEA", "COUNTYA"))
-data1940j <- data1940j %>%
-  mutate(GISJOIN = GISJOIN.x, YEAR = YEAR.x, STATE = STATE.x, COUNTY = COUNTY.x) %>%
-  
-  # value_farm is missing the land & livestock components!!
-  # this variable only includings buildings and implements
-  
-  mutate(value_farm = BWD001+BWD002, n_farm = BY1001, cows = NA, horses = NA, value_implements = BWD002, pop = BVU001, male = BVY001, 
-         female = BVY002, enrolled = BWU001+BWU002+BWU003+BWU004+BWU005, urban_pop = NA, 
-         pct_urban = NA, illiterate = NA, acres_farms = BY3001, 
-         acres_irrigated = NA, pct_irrigated = NA) %>%
-  mutate(avg_size = acres_farms/n_farm, cows_per_person = cows/n_farm, pct_enrolled = enrolled/pop*100, 
-         pct_illiterate = illiterate/pop*100) %>%
-  select(STATEA, COUNTYA, GISJOIN, YEAR, STATE, COUNTY, value_farm, value_implements, avg_size, n_farm, 
-         acres_farms, acres_irrigated, pct_irrigated, cows, cows_per_person, horses, pop, male, female, 
-         enrolled, pct_enrolled, urban_pop, pct_urban, illiterate, pct_illiterate)
-
-# 1950
-
-data1950a <- as_tibble(read.csv("raw-data/nhgis0003_csv/nhgis0003_ds83_1950_county.csv")) %>%
-  mutate(GISJOIN = as.character(GISJOIN), STATE = as.character(STATE), COUNTY = as.character(COUNTY), 
-         AREANAME =  as.character(AREANAME))
-
-data1950b <- as_tibble(read.csv("raw-data/nhgis0003_csv/nhgis0003_ds84_1950_county.csv")) %>%
-  mutate(GISJOIN = as.character(GISJOIN), STATE = as.character(STATE), COUNTY = as.character(COUNTY), 
-         AREANAME = as.character(AREANAME))
-
-data1950j <- full_join(data1950a, data1950b, by = c("STATEA", "COUNTYA")) %>%
-  mutate(GISJOIN = GISJOIN.x, YEAR = YEAR.x, STATE = STATE.x, COUNTY = COUNTY.x, 
-         B18001 = as.numeric(B18001)) %>%
-  
-  # value_farm is missing the implements & livestock components!!
-  # This variable only includings buildings and land
-  
-  mutate(value_farm = B3M001, n_farm = B3Z001, cows = NA, horses = NA, value_implements = NA, pop = B13001, male = B3E001, 
-         female = B3E002, enrolled = B2A001+B2A002+B2A003+B2A004+B2A005, urban_pop = B2J001, 
-         pct_urban = B2J001/B13001*100, illiterate = NA, acres_farms = B3K001, 
-         acres_irrigated = NA, pct_irrigated = NA) %>%
-  mutate(avg_size = acres_farms/n_farm, cows_per_person = cows/n_farm, pct_enrolled = enrolled/pop*100, pct_illiterate = illiterate/pop*100) %>%
-  select(STATEA, COUNTYA, GISJOIN, YEAR, STATE, COUNTY, value_farm, value_implements, avg_size, n_farm, 
-         acres_farms, acres_irrigated, pct_irrigated, cows, cows_per_person, horses, pop, male, female, 
-         enrolled, pct_enrolled, urban_pop, pct_urban, illiterate, pct_illiterate)
-
-#1960
-# The data are SPARSE yikes
-
-data1960a <- as_tibble(read.csv("raw-data/nhgis0003_csv/nhgis0003_ds89_1960_county.csv")) %>%
-  mutate(GISJOIN = as.character(GISJOIN), STATE = as.character(STATE), COUNTY = as.character(COUNTY), 
-         AREANAME =  as.character(AREANAME))
-
-data1960b <- as_tibble(read.csv("raw-data/nhgis0003_csv/nhgis0003_ds90_1960_county.csv")) %>%
-  mutate(GISJOIN = as.character(GISJOIN), STATE = as.character(STATE), COUNTY = as.character(COUNTY), 
-         AREANAME = as.character(AREANAME))
-
-data1960c <- as_tibble(read.csv("raw-data/nhgis0003_csv/nhgis0003_ds91_1960_county.csv")) %>%
-  mutate(GISJOIN = as.character(GISJOIN), STATE = as.character(STATE), COUNTY = as.character(COUNTY), 
-         AREANAME = as.character(AREANAME))
-
-data1960j <- full_join(data1960a, data1960b, by = c("STATEA", "COUNTYA"))
-data1960j <- full_join(data1960j, data1960c, by = c("STATEA", "COUNTYA"))
-data1960j <- data1960j %>%
-  mutate(value_farm = NA, n_farm = NA, cows = NA, horses = NA, 
-         avg_size = NA, value_implements = NA, pop = B47001, male = B5H001, 
-         female = B5H002, enrolled = NA, urban_pop = NA, pct_urban = NA, illiterate = NA, 
-         acres_farms = NA, acres_irrigated = NA, pct_irrigated = NA) %>%
-  mutate(cows_per_person = cows/n_farm, pct_enrolled = enrolled/pop*100, pct_illiterate = illiterate/pop*100) %>%
-  select(STATEA, COUNTYA, GISJOIN, YEAR, STATE, COUNTY, value_farm, value_implements, avg_size, n_farm, 
-         acres_farms, acres_irrigated, pct_irrigated, cows, cows_per_person, horses, pop, male, female, 
-         enrolled, pct_enrolled, urban_pop, pct_urban, illiterate, pct_illiterate)
-
-```
-
-```{r}
-allData_inflated <- as_tibble(bind_rows(data1870j, data1880j, data1890j, 
-                       data1900j, data1910j, data1920j, data1930j, data1940j, data1950j, data1960j)) %>%
-  mutate(pct_male = male/pop*100, avg_value_farm = value_farm/n_farm, cows_per_farm = cows_per_person, 
-         avg_value_implements = value_implements/n_farm, pct_urban = ifelse(pct_urban > 100, NA, pct_urban)) %>%
-  
-  # I mislabeled cows_per_farm as cows_per_person, so I'm doing damage control now
-  
-  select(!cows_per_person) %>%
-  filter(STATE == "North Dakota" | STATE == "South Dakota" | STATE == "Dakota Territory" | 
-           STATE == "Nebraska" | STATE == "Minnesota" | STATE == "Iowa" | STATE == "Missouri" | 
-           STATE == "Wisconsin" | STATE == "Illinois" | STATE == "Kansas" | STATE == "Michigan" | 
-           STATE == "Indiana" | STATE == "Ohio", 
-         
-         # Get rid of the weird infinite values in this column 
-         
-         ! is.infinite(cows_per_farm))
-
-# Now adjust everything for inflation
-# I made a spreadsheet based on this website: 
-# https://www.officialdata.org/us/inflation/1960?amount=1
-
-inflation <- read_excel("inflation.xlsx")
-
-x <- left_join(allData_inflated, inflation, by = c("YEAR" = "year")) %>%
-  # Use the multiplier column to adjust for inflation
-  mutate(value_farm = value_farm*multiplier, value_implements = value_implements*multiplier) %>%
-  mutate(avg_value_farm = value_farm/n_farm, avg_value_implements = value_implements/n_farm) %>%
-  mutate("Value of Farms" = as.numeric(value_farm), "Average Farm Value" = as.numeric(avg_value_farm), 
-         "Value of Implements" = as.numeric(value_implements), 
-         "Average Implement Value" = as.numeric(avg_value_implements), 
-         "Average Farm Size" = as.numeric(avg_size), "Number of Farms" = as.numeric(n_farm), 
-         "Acres of Farmland" = as.numeric(acres_farms), "Irrigated Acres" = as.numeric(acres_irrigated), 
-         "Percentage of Farmland Irrigated" = as.numeric(pct_irrigated), "Number of Cows" = as.numeric(cows),
-         "Number of Cows per Farm" = as.numeric(cows_per_farm), "Number of Horses" = as.numeric(horses), 
-         "Total Population" = as.numeric(pop), "Male Population" = as.numeric(male), 
-         "Female Population" = as.numeric(female), "Male Percentage of Population" = as.numeric(pct_male),
-         "Total School Enrollment" = as.numeric(enrolled), 
-         "Percentage School Enrollment" = as.numeric(pct_enrolled), 
-         "Urban Population" = as.numeric(urban_pop), 
-         "Percent of Population in Urban Areas" = as.numeric(pct_urban), 
-         "Illiterate Population" = as.numeric(illiterate), 
-         "Illiteracy Rate" = as.numeric(pct_illiterate)) %>%
-  select(STATEA, COUNTYA, GISJOIN, YEAR, STATE, COUNTY, 
-         "Value of Farms", "Average Farm Value", "Value of Implements", "Average Implement Value",
-                   "Average Farm Size", "Number of Farms", "Acres of Farmland", "Irrigated Acres", 
-                   "Percentage of Farmland Irrigated", "Number of Cows", "Number of Cows per Farm", 
-                   "Number of Horses", "Total Population", "Male Population", "Female Population", 
-                   "Male Percentage of Population", "Total School Enrollment", 
-                   "Percentage School Enrollment", "Urban Population", 
-                   "Percent of Population in Urban Areas", "Illiterate Population", "Illiteracy Rate")
-
-# saving this for later
-# will need in shiny app
-#sliderOptions <- c("Value of Farms", "Average Farm Value", "Value of Implements", "Average Implement Value",
-                   #"Average Farm Size", "Number of Farms", "Acres of Farmland", "Irrigated Acres", 
-                   #"Percentage of Farmland Irrigated", "Number of Cows", "Number of Cows per Farm", 
-                   #"Number of Horses", "Total Population", "Male Population", "Female Population", 
-                   #"Male Percentage of Population", "Total School Enrollment", 
-                   #"Percentage School Enrollment", "Urban Population", 
-                   #"Percent of Population in Urban Areas", "Illiterate Population", "Illiteracy Rate")
-
-
-```
-
-```{r}
-Census_1870 <- x %>% filter(YEAR == "1870") %>%
-    select_if(~ !all(is.na(.))) %>%
-    select(-STATEA:-GISJOIN & -COUNTY)
-
-Census_1880 <- x %>% filter(YEAR == "1880") %>%
-    select_if(~ !all(is.na(.))) %>%
-    select(-STATEA:-GISJOIN & -COUNTY)
-
-Census_1890 <- x %>% filter(YEAR == "1890") %>%
-    select_if(~ !all(is.na(.))) %>%
-    select(-STATEA:-GISJOIN & -COUNTY)
-
-Census_1900 <- x %>% filter(YEAR == "1900") %>%
-    select_if(~ !all(is.na(.))) %>%
-    select(-STATEA:-GISJOIN & -COUNTY)
-
-Census_1910 <- x %>% filter(YEAR == "1910") %>%
-    select_if(~ !all(is.na(.))) %>%
-    select(-STATEA:-GISJOIN & -COUNTY)
-
-Census_1920 <- x %>% filter(YEAR == "1920") %>%
-    select_if(~ !all(is.na(.))) %>%
-    select(-STATEA:-GISJOIN & -COUNTY)
-
-Census_1930 <- x %>% filter(YEAR == "1930") %>%
-    select_if(~ !all(is.na(.))) %>%
-    select(-STATEA:-GISJOIN & -COUNTY)
-
-Census_1940 <- x %>% filter(YEAR == "1940") %>%
-    select_if(~ !all(is.na(.))) %>%
-    select(-STATEA:-GISJOIN & -COUNTY)
-
-Census_1950 <- x %>% filter(YEAR == "1950") %>%
-    select_if(~ !all(is.na(.))) %>%
-    select(-STATEA:-GISJOIN & -COUNTY)
-
-Census_1960 <- x %>% filter(YEAR == "1960") %>%
-    select_if(~ !all(is.na(.))) %>%
-    select(-STATEA:-GISJOIN & -COUNTY)
-
-
-
-```
-
-# Working App
-
-```{r workingApp}
-#
-# This is a Shiny web application. You can run the application by clicking
-# the 'Run App' button above.
-#
-# Find out more about building applications with Shiny here:
-#
-#    http://shiny.rstudio.com/
-#
-
-# LOAD THE REQUIRED PACKAGES
-
-library(shiny)
-library(haven)
-library(tidyverse)
-library(gt)
-library(devtools)
-library(tibble)
-library(foreign)
-library(scales)
-library(shinythemes)
-library(plotly)
-library(leaflet)
-library(broom)
-library(patchwork)
-library(magick)
-library(giphyr)
-library(gridExtra)
-
-
-# packages for mapping
-library(leaflet)
-library(spdplyr)
-library(rmapshaper)
-library(sf)
-
-
-# READ IN THE DATA
-
-# Read in the model for gt and plot
-
-maleedu_model <- readRDS("maleedu_model.rds") 
-
-# Read in the shapefiles
-
-shapefiles <- readRDS(file = "shapefiles.rds")
-
-
-# Read in the dataset made specifically for mapping
-
-x <- readRDS("mwData.rds")
-
-# Now subset by year
-
-# I tried saving these as Rds files as well, but I kept getting a weird error
-# Might be a bug, according to SO
-Census_1870 <- x %>% filter(YEAR == "1870") %>%
-    select_if(~ !all(is.na(.))) %>%
-    select(-STATEA:-GISJOIN & -COUNTY)
-
-Census_1880 <- x %>% filter(YEAR == "1880") %>%
-    select_if(~ !all(is.na(.))) %>%
-    select(-STATEA:-GISJOIN & -COUNTY)
-
-Census_1890 <- x %>% filter(YEAR == "1890") %>%
-    select_if(~ !all(is.na(.))) %>%
-    select(-STATEA:-GISJOIN & -COUNTY)
-
-Census_1900 <- x %>% filter(YEAR == "1900") %>%
-    select_if(~ !all(is.na(.))) %>%
-    select(-STATEA:-GISJOIN & -COUNTY)
-
-Census_1910 <- x %>% filter(YEAR == "1910") %>%
-    select_if(~ !all(is.na(.))) %>%
-    select(-STATEA:-GISJOIN & -COUNTY)
-
-Census_1920 <- x %>% filter(YEAR == "1920") %>%
-    select_if(~ !all(is.na(.))) %>%
-    select(-STATEA:-GISJOIN & -COUNTY)
-
-Census_1930 <- x %>% filter(YEAR == "1930") %>%
-    select_if(~ !all(is.na(.))) %>%
-    select(-STATEA:-GISJOIN & -COUNTY)
-
-Census_1940 <- x %>% filter(YEAR == "1940") %>%
-    select_if(~ !all(is.na(.))) %>%
-    select(-STATEA:-GISJOIN & -COUNTY)
-
-Census_1950 <- x %>% filter(YEAR == "1950") %>%
-    select_if(~ !all(is.na(.))) %>%
-    select(-STATEA:-GISJOIN & -COUNTY)
-
-Census_1960 <- x %>% filter(YEAR == "1960") %>%
-    select_if(~ !all(is.na(.))) %>%
-    select(-STATEA:-GISJOIN & -COUNTY)
-
-
-# If I put "Census_1870" = "1870", would only the year show up in dropdown menu?
-data_sets <- c("1870" = "Census_1870", "1880" = "Census_1880", "1890" = "Census_1890", "1900" = "Census_1900", "1910" = "Census_1910", "1920" = "Census_1920",  "1930" ="Census_1930",  "1940" ="Census_1940",  "1950" ="Census_1950",  "1960" ="Census_1960")
-
-
-# Read in the dataset for maps and models
-
-allData <- readRDS("my_data.rds")
-
-
-# START THE APP
-
-# Input
-
-ui <- fluidPage(
-    
-    # flatly is a nice theme to make the tabs look put together
-    
-    # Application title
-    
-    navbarPage("Agriculture and Education in the U.S.", theme = shinytheme("flatly"),
-               
-               # remember that tab panel is for what shows up in the tab, and title panel is 
-               # for what shows up at the top of the page within the tab                  
-               
-               tabPanel("Introduction",
-                        titlePanel("A Brief Overview of Midwest Agriculture"),
-                        
-                        
-                        # Create a spot for the plot
-                        # Why is the text on top of the image?? :(
-                        mainPanel(
-                            tabsetPanel(id = "tabsMain",
-                                        tabPanel("Farms & Acreage",
-                                                 
-                                                 # Create a fluid row in order to comment next to the gifs
-                                                 # column specifications might need to be changed
-                                                 
-                                                 fluidRow(column(width = 3, textOutput("acre_com")),
-                                                          column(width = 9, align = "center",
-                                                                 imageOutput("acre_gif")))
-                                          
-                                        ),
-                                        tabPanel("Urbanization",
-                                                 # Generate a row with a sidebar
-                                                 fluidRow(column(width = 3, textOutput("pop_com")),
-                                                              column(width = 9, align = "center",
-                                                                     imageOutput("pop_gif")))
-                                                 ),
-                                        tabPanel("Mechanization",
-                                                fluidRow(column(width = 3, textOutput("plot2_com")),
-                                                              column(width = 9, align = "center",
-                                                                     imageOutput("plot2")))
-                            )))),
-               
-               
-               tabPanel("Models",
-                        
-                        # Give the page a title
-                        titlePanel("Agriculture and Education, by County"),
-                        
-                        
-                        # Create a spot for the plot
-                        mainPanel("",
-                                  tabsetPanel(id = "tabsMain",
-                                              
-                                              tabPanel("Implements and Education",
-                                                       # Generate a row with a sidebar
-                                                       sidebarLayout(      
-                                                           
-                                                           # Define the sidebar with one input
-                                                           # comprehensive options:
-                                                           # c("1870" = "1870", "1880" = "1880", "1890" = "1890", "1900" = "1900","1910" = "1910", "1920" = "1920", "1930" = "1930", "1940" = "1940", "1950" = "1950", "1960" = "1960")
-                                                           sidebarPanel(
-                                                               selectInput("impYear", "Year:", 
-                                                                           choices=c("1870" = "1870", "1890" = "1890", "1910" = "1910", "1920" = "1920", "1930" = "1930", "1940" = "1940"), 
-                                                                           multiple = TRUE)),
-                                                           helpText("*Enter help text*")
-                                                       ),
-                                                       
-                                                       # this tells the UI what plot to put 
-                                                       
-                                                       plotOutput("impedu_plot"),
-                                                       p("say some stuff")
-                                              ),
-                                              
-                                              tabPanel("Cattle and Education",
-                                                       # Generate a row with a sidebar
-                                                       sidebarLayout(      
-                                                           
-                                                           # Define the sidebar with one input
-                                                           # comprehensive options:
-                                                           # c("1870" = "1870", "1880" = "1880", "1890" = "1890", "1900" = "1900","1910" = "1910", "1920" = "1920", "1930" = "1930", "1940" = "1940", "1950" = "1950", "1960" = "1960")
-                                                           sidebarPanel(
-                                                               selectInput("cowYear", "Year:", 
-                                                                           choices=c("1870" = "1870", "1890" = "1890", "1910" = "1910"), 
-                                                                           multiple = TRUE)),
-                                                           helpText("*Enter help text*")
-                                                       ),
-                                                       
-                                                       # this tells the UI what plot to put 
-                                                       
-                                                       plotOutput("agPlot"),
-                                                       p("Number of cows might be seen as a stand in for farm size. Is it?")
-                                              ),
-                                              
-                                              tabPanel("Gender and Education",
-                                                       
-                                                       #mainPanel("",
-                                                                 #gt_output("maleedu_gt"))
-                                                       
-                                                       fluidRow(column(width = 6, plotOutput("maleedu_plot")),
-                                                                column(width = 6, #align = "center",
-                                                                       gt_output("maleedu_gt")))
-                                                       
-                                              )
-                                  )
-                        )),
-               
-               
-               tabPanel("Maps",
-                        titlePanel("Midwest Map Explorer"),
-                        p("For best results, view in fullscreen mode."),
-                        p("Maps may take up to 30 seconds to load...but they're worth it!"),
-                        sidebarLayout(
-                            
-                            sidebarPanel(
-                                uiOutput("choose_dataset"),
-                                uiOutput("choose_columns"),
-                                uiOutput("choose_columns2"),
-                                br(),
-                            ),
-                            mainPanel(leafletOutput("map1"),
-                                      leafletOutput("map2"))
-                        )),
-               
-               tabPanel("About",
-                        
-                        # Give the page a title
-                        titlePanel("About this project"),
-                        p("My name is Julia Englebert. I am a senior at Harvard College studying Near Eastern Languages and Civilizations with a secondary field in Ethnicity, Migration, and Rights. Some of my academic interests include the history and future of Midwestern agriculture, and the role of data science in shaping social policy."),
-                        br(),
-                        p("This project uses historical census and American Community Survey (ACS) data to explore correlations between agriculture and education in the Midwestern United States. By joining the two datasets, the former containing agricultural data and the later containing demographic data, I was able to look at the impact of farming, land value, crop value, and more on education in Midwestern communities over the course of a century. I chose this particular time range in part because of the data that was available to me, and in part due to the economic, industrial, and education policy changes that ocurred from 1870 to 1960. My data is sourced from the IPUMS National Historical Geographic Information System (NHGIS) at nhgis.org. IPUMS provides census data from around the world, but my project focuses specifically on the United States from 1870 to 1960. All datasets and gis files used for this project can be downloaded from the NHGIS Data Finder:"),
-                        p(a(href="https://data2.nhgis.org/main", "NHGIS Data Finder")),
-                        br(),
-                        p("To see more of my work, please visit my Github account:"),
-                        p(a(href="https://github.com/julia-englebert", "Julia Englebert")),
-                        br(),
-                        titlePanel("Citations"),
-                        p("Steven Manson, Jonathan Schroeder, David Van Riper, and Steven Ruggles. IPUMS National Historical Geographic Information System: Version 14.0 [Database]. Minneapolis, MN: IPUMS. 2019. http://doi.org/10.18128/D050.V14.0"),
-                        p("The College of William and Mary and the Minnesota Population Center. School Attendance Boundary Information System (SABINS): Version 1.0. Minneapolis, MN: University of Minnesota 2011.")
-               ),
-               
-               tabPanel("Codebook",
-                        titlePanel("How were variables measured for this project?"),
-                        p("Put some info here. An interactive gt table would be nice if you have time."))
-    )
-)
-
-
-
-# use plotly to allow hover text to appear on plots, giving more info about the point
-
-server <- (function(input, output, session) {
-    
-    
-    output$acre_com <- renderText({
-        
-        "This is the commentary about farm acreage"
-    })
-    
-    output$acre_gif <- renderImage({
-        list(src = "acre_gif.gif")
-        
-    }, deleteFile = FALSE)
-    
-    output$pop_com <- renderText({
-        
-        "This is the commentary about population"
-    })
-    
-    output$pop_gif <- renderImage({
-        list(src = "pop_gif.gif")
-        
-    }, deleteFile = FALSE)
-    
-    output$plot2_com <- renderText({
-        
-        "This is the commentary about mechanization"
-    })
-    
-    output$plot2 <- renderImage({
-        list(src = "plot2.gif")
-        
-    }, deleteFile = FALSE)
-    
-    # Implements plot
-    
-    output$impedu_plot <- renderPlot({
-        
-        allData %>%
-            filter(YEAR %in% input$impYear) %>%
-            mutate(YEAR = as.factor(YEAR)) %>%
-            mutate(YEAR = fct_explicit_na(YEAR, na_level = NA)) %>%
-            group_by(YEAR) %>%
-            select(YEAR, avg_value_implements, pct_enrolled) %>%
-            na.omit() %>%
-            ggplot(aes(x = avg_value_implements, y = pct_enrolled, color = YEAR)) + 
-            geom_point(alpha = 0.1) +
-            geom_smooth(method = "lm", se = FALSE) +
-            scale_fill_viridis_d(aesthetics = "color") +
-            ylim(0, 45) + 
-            labs(title = "Relationship Between Farm Implements and Education, by County",
-                 subtitle = "Midwestern United States", 
-                 x = "Average Value of Implements", 
-                 y = "Percent Population Enrolled in School") +
-            scale_x_log10(labels = comma) +
-            theme_classic()
-    })
-    
-    # Fill in the spot we created for a plot
-    output$agPlot <- renderPlot({
-        
-        # Render a plot
-        allData %>%
-            filter(YEAR %in% input$cowYear) %>%
-            mutate(YEAR = as.factor(YEAR)) %>%
-            mutate(YEAR = fct_explicit_na(YEAR, na_level = NA)) %>%
-            group_by(YEAR) %>%
-            select(YEAR, cows_per_farm, pct_enrolled) %>%
-            na.omit() %>%
-            ggplot(aes(x = cows_per_farm, y = pct_enrolled, color = YEAR)) +
-            geom_point(alpha = 0.1) +
-            geom_smooth(method = "lm", se = FALSE) +
-            scale_color_viridis_d() +
-            ylim(0, 45) +
-            scale_x_log10(labels = comma) +
-            labs(title = "Cows and Education",
-                 subtitle = "Relationship between the number of cows per farm\nand school enrollment, by county",
-                 x = "Average Cows per Farm",
-                 y = "Percent of Population Enrolled in School") +
-            theme_classic()
-    })
-    
-    # maleedu plot and gt
-    
-    output$maleedu_plot <- renderPlot({
-        maleedu_model %>%
-            ungroup() %>%
-            select(YEAR, pct_male_coef, pct_male_upper, pct_male_lower) %>%
-            mutate(YEAR = as.factor(YEAR)) %>%
-            group_by(YEAR) %>%
-            ggplot(aes(x = YEAR, y = pct_male_coef)) + 
-            geom_errorbar(ymin = maleedu_model$pct_male_lower, ymax = maleedu_model$pct_male_upper, color = "#453781FF") + 
-            geom_point(color = "#440154FF") +
-            theme_classic() +
-            ylim(-1.5, 0.5) + 
-            labs(x = "Year",
-                 y = "Coefficient",
-                 title = "Percent Male Coefficients Over Time",
-                 subtitle = "Measuring the effect of being male\non school enrollment")
-    })
-    
-    output$maleedu_gt <- render_gt({
-        maleedu_model%>%
-            ungroup() %>%
-            
-            # Select the columns needed, as per the instructions
-            
-            select(-data:-reg_results) %>%
-            
-            gt() %>%
-            
-            # Add the desired titles, subtitles, and column labels
-            
-            tab_header(title = "Effect of Gender and Number of Farms on Enrollment",
-                       subtitle = "With 95% Confidence Interval") %>%
-            tab_spanner(label = "Farm Coefficients", columns = vars(n_farm_lower, n_farm_coef, n_farm_upper)) %>%
-            tab_spanner(label = "Percent Male Coefficients", columns = vars(pct_male_lower, pct_male_coef,pct_male_upper)) %>%
-            tab_spanner(label = "Interaction Coefficients", columns = vars(interaction_lower, interaction_coef, interaction_upper)) %>%
-            cols_label(YEAR = "Year", n_farm_coef	= "Estimate", n_farm_upper = "Upper", n_farm_lower = "Lower", pct_male_coef = "Estimate", pct_male_upper = "Upper", pct_male_lower = "Lower",	interaction_coef = "Estimate", interaction_upper = "Upper", interaction_lower = "Lower") %>%
-            # Round all values to two decimal places
-            
-            fmt_number(columns = vars(n_farm_lower, n_farm_coef, n_farm_upper, pct_male_lower, pct_male_coef,pct_male_upper, interaction_lower, interaction_coef, interaction_upper), decimals = 4)
-        
-    })
-    
-    
-    # Map output
-    
-    output$choose_dataset <- renderUI({
-        selectInput("dataset", "Choose Census Year:", as.list(data_sets))
-    })
-    
-    # Check boxes
-    output$choose_columns <- renderUI({
-        # If missing input, return to avoid error later in function
-        if(is.null(input$dataset))
-            return()
-        
-        # Get the data set with the appropriate name
-        dat <- get(input$dataset)
-        
-        # Get rid of "YEAR" and "STATE" so that users don't pick them and make senseless maps
-        
-        colnames1 <- names(dat)
-        colnames <- colnames1[!colnames1 %in% "YEAR" & !colnames1 %in% "STATE"]
-        
-        # Create the dropdown menu and select all columns by default
-        selectizeInput("columns", "Choose Variable:", 
-                       choices  = colnames)
-    })
-    
-    
-    # Map output
-    output$map1 <- renderLeaflet({
-        # If missing input, return to avoid error later in function
-        if(is.null(input$dataset))
-            return()
-        
-        # Get the data set
-        dat <- get(input$dataset)
-        
-        # Make sure columns are correct for data set (when data set changes, the
-        # columns will initially be for the previous data set)
-        if (is.null(input$columns) || !(input$columns %in% names(dat)))
-            return()
-        
-        year <- dat %>% slice(1) %>% pull(YEAR)
-        
-        # Keep the selected columns
-        dat <- dat[, input$columns, drop = FALSE]
-        
-        myvar <- input$columns
-        
-        datayear <- mwData %>%
-            # use get() to use the stored variable
-            # idk why, but it doesn't work without this
-            # the variable must be converted to a double in the original mwData dataset
-            mutate(myvariable = (get(myvar))) %>%
-            filter(YEAR == year, myvariable > 0) %>%
-            select(GISJOIN, myvariable)
-        
-        # Import Census Tract Shapefile into R as SpatialPolygonsDataFrameFormat (SP Dataframe)
-        # dsn is location of folder which contains shapefiles, (.proj, .shp etc.)
-        # layer is the filename of the .shp file inside the
-        # folder dsn points to. 
-        
-        dsnyear <- shapefiles %>% 
-            filter(Year == year) %>% 
-            pull(Dsn)
-        layeryear <- shapefiles %>% 
-            filter(Year == year) %>% 
-            pull(Layer)
-        
-        countyyear <- sf::st_read(dsn = dsnyear,
-                                  layer = layeryear)
-        
-        countyyear <-
-            countyyear %>%
-            merge(datayear, "GISJOIN")
-        
-        
-        # Set projection of tracts dataset to `projection` required by leaflet
-        
-        countyyear <- sf::st_transform(countyyear, crs="+init=epsg:4326")
-        
-        # Condense size of data for faster processing
-        
-        countyyear <- rmapshaper::ms_simplify(countyyear)
-        
-        # Set palette color
-        
-        pal <- colorNumeric("viridis", NULL)
-        
-        #  Plot the data
-        
-        # use shiny to add a title, which will be be equivalent to myvar
-        
-        leaflet(countyyear) %>%
-            addTiles() %>%
-            addPolygons(stroke = FALSE, smoothFactor = 0.3, fillOpacity = 1,
-                        fillColor = ~pal(myvariable)) %>%
-            addLegend(pal = pal, values = ~myvariable, opacity = 1.0, title = myvar)
-        
-    })
-    
-    # map2 dropdown menu
-    output$choose_columns2 <- renderUI({
-        # If missing input, return to avoid error later in function
-        if(is.null(input$dataset))
-            return()
-        
-        # Get the data set with the appropriate name
-        dat <- get(input$dataset)
-        
-        # Get rid of "YEAR" and "STATE" so that users don't pick them and make senseless maps
-        
-        colnames1 <- names(dat)
-        colnames <- colnames1[!colnames1 %in% "YEAR" & !colnames1 %in% "STATE"]
-        
-        # Create the dropdown menu and select all columns by default
-        selectizeInput("columns2", "Choose Variable to Compare:", 
-                       choices  = colnames,
-                       options = list(
-                           placeholder = 'Variables...',
-                           onInitialize = I('function() { this.setValue(""); }')))
-    })
-    
-    output$map2 <- renderLeaflet({
-        # If missing input, return to avoid error later in function
-        if(is.null(input$dataset))
-            return()
-        
-        # Get the data set
-        dat <- get(input$dataset)
-        
-        # Make sure columns are correct for data set (when data set changes, the
-        # columns will initially be for the previous data set)
-        if (is.null(input$columns2) || !(input$columns2 %in% names(dat)))
-            return()
-        
-        year <- dat %>% slice(1) %>% pull(YEAR)
-        
-        # Keep the selected columns
-        dat <- dat[, input$columns2, drop = FALSE]
-        
-        myvar <- input$columns2
-        
-        datayear <- mwData %>%
-            # use get() to use the stored variable
-            # idk why, but it doesn't work without this
-            # the variable must be converted to a double in the original mwData dataset
-            mutate(myvariable = (get(myvar))) %>%
-            filter(YEAR == year, myvariable > 0) %>%
-            select(GISJOIN, myvariable)
-        
-        # Import Census Tract Shapefile into R as SpatialPolygonsDataFrameFormat (SP Dataframe)
-        # dsn is location of folder which contains shapefiles, (.proj, .shp etc.)
-        # layer is the filename of the .shp file inside the
-        # folder dsn points to. 
-        
-        dsnyear <- shapefiles %>% 
-            filter(Year == year) %>% 
-            pull(Dsn)
-        layeryear <- shapefiles %>% 
-            filter(Year == year) %>% 
-            pull(Layer)
-        
-        countyyear <- sf::st_read(dsn = dsnyear,
-                                  layer = layeryear)
-        
-        countyyear <-
-            countyyear %>%
-            merge(datayear, "GISJOIN")
-        
-        
-        # Set projection of tracts dataset to `projection` required by leaflet
-        
-        countyyear <- sf::st_transform(countyyear, crs="+init=epsg:4326")
-        
-        # Condense size of data for faster processing
-        
-        countyyear <- rmapshaper::ms_simplify(countyyear)
-        
-        # Set palette color
-        
-        pal <- colorNumeric("viridis", NULL)
-        
-        #  Plot the data
-        
-        # use shiny to add a title, which will be be equivalent to myvar
-        
-        leaflet(countyyear) %>%
-            addTiles() %>%
-            addPolygons(stroke = FALSE, smoothFactor = 0.3, fillOpacity = 1,
-                        fillColor = ~pal(myvariable)) %>%
-            addLegend(pal = pal, values = ~myvariable, opacity = 1.0, title = myvar)
-        
-    })
-    
-    
-    
-    output$model1 <- render_gt({
-        
-        # experimental model
-        
-        model1
-        
-    })
-})
-
-
-
-# Run the application 
-
-shinyApp(ui = ui, server = server)
-
-
-```
 
