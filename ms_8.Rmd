@@ -483,12 +483,15 @@ mwData <- allData %>%
 # Now save the gis data with short names for sake of the shiny app
 # hopefully this will work...
 
+# I had to shorten the file paths in order to deploy my app
+# The maps can no longer render in this directory as a result
 dsn1870 <- "raw-data/nhgis0002_shape/nhgis0002_shapefile_tl2008_us_county_1870"
   layer1870 <- "US_county_1870_conflated"
 dsn1880 <- "raw-data/nhgis0002_shape/nhgis0002_shapefile_tl2008_us_county_1880"
   layer1880 <- "US_county_1880_conflated"
 dsn1890 <- "raw-data/nhgis0002_shape/nhgis0002_shapefile_tl2008_us_county_1890"
-  layer1890 <- "US_county_1890_conflated"
+layer1890 <- "US_county_1890_conflated"
+
 dsn1900 <- "raw-data/nhgis0003_shape/nhgis0003_shapefile_tl2008_us_county_1900"
   layer1900 <- "US_county_1900_conflated"
 dsn1910 <- "raw-data/nhgis0003_shape/nhgis0003_shapefile_tl2008_us_county_1910"
@@ -525,7 +528,7 @@ dsn1960 <- "raw-data/nhgis0003_shape/nhgis0003_shapefile_tl2008_us_county_1960"
 
 # gis template for any year/variable desired
 # only change these two lines!
-year <- 1950
+year <- 1870
 
 #choices for myvar will be determined by: 
 appPlan <- mwData %>%
@@ -939,4 +942,79 @@ for(i in 2:100){
 }
 
 anim_save("final/pop_gif.gif", pop_gif)
+
+# New Dataset for Mapping
+
+```{r mwData-shapefile-merger}
+# NEW tibble
+# columns: COUNTYA?, YEAR, variable, value
+
+mapData1 <- mwData %>% pivot_longer(cols = "Value of Farms":"Illiteracy Rate", names_to = "Variable")
+
+mapData <- left_join(mapData1, shapefiles, by = c("YEAR" = "Year"))
+
+```
+
+```{r}
+year <- 1870
+
+#choices for myvar will be determined by: 
+appPlan <- mwData %>%
+  filter(YEAR == year) %>%
+  select_if(~ !all(is.na(.))) %>%
+  select(-STATEA:-COUNTY)
+
+# myvar options will be determined by column names of appPlan & displayed via dropdown widget
+myvar <- "Value of Farms"
+
+datayear <- mapData %>%
+  # use get() to use the stored variable
+  # idk why, but it doesn't work without this
+  # the variable must be converted to a double in the original mwData dataset
+  filter(YEAR == year, Variable == myvar) %>%
+  select(GISJOIN, YEAR, Variable, value, Dsn, Layer)
+
+# Import Census Tract Shapefile into R as SpatialPolygonsDataFrameFormat (SP Dataframe)
+# dsn is location of folder which contains shapefiles, (.proj, .shp etc.)
+# layer is the filename of the .shp file inside the
+# folder dsn points to. 
+
+countyyear <- sf::st_read(dsn = dsnyear,
+                         layer = layeryear)
+# IN PROGRESS, START HERE
+# make a huge sf object that has all of the info
+# save as RDS
+# use only one filter (for year and variable) with the code calling the palette and below
+
+countyyear <-
+  countyyear %>%
+  merge(datayear, "GISJOIN")
+
+# wow you can save sf objects as RDS files, apparently!
+# do this once you have everything done
+# but then again, if I can save this as an RDS, do I actually need to pivot longer? does that make sense?
+#saveRDS(countyyear, file = "testSfObj.rds")
+
+# Set projection of tracts dataset to `projection` required by leaflet
+
+countyyear <- sf::st_transform(countyyear, crs="+init=epsg:4326")
+
+# Condense size of data for faster processing
+
+countyyear <- rmapshaper::ms_simplify(countyyear)
+
+# Set palette color
+
+pal <- colorNumeric("viridis", NULL)
+
+#  Plot the data
+
+# use shiny to add a title, which will be be equivalent to myvar
+
+leaflet(countyyear) %>%
+  addTiles() %>%
+  addPolygons(stroke = FALSE, smoothFactor = 0.3, fillOpacity = 1,
+              fillColor = ~pal(value)) %>%
+  addLegend(pal = pal, values = ~value, opacity = 1.0, title = myvar)
+```
 

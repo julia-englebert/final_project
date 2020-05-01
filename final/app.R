@@ -14,17 +14,21 @@ library(haven)
 library(tidyverse)
 library(gt)
 library(devtools)
-library(tibble)
-# don't think I need this
+#library(tibble)
+
+# I'm getting a warning about the foreign package when I try to deploy
+# Luckily, it's not necessary
 #library(foreign)
+
 library(scales)
 library(shinythemes)
-library(plotly)
+#library(plotly)
 library(leaflet)
 library(broom)
-library(patchwork)
-library(magick)
-library(giphyr)
+# probably don't need these, but double check
+#library(patchwork)
+#library(magick)
+#library(giphyr)
 library(gridExtra)
 library(readxl)
 
@@ -32,7 +36,7 @@ library(readxl)
 # packages for mapping
 library(leaflet)
 library(spdplyr)
-library(rmapshaper)
+#library(rmapshaper)
 library(sf)
 
 
@@ -54,6 +58,8 @@ codebook <- read_excel("mw_codebook.xlsx") %>%
     column_to_rownames(var="Year")
 
 # Read in the shapefiles
+# These filepaths were initially too long (101 bytes, I kid you not)
+# So I changed the file names
 
 shapefiles <- readRDS(file = "shapefiles.rds") %>% 
     head(n = 3L)
@@ -245,18 +251,22 @@ ui <- fluidPage(
                
                tabPanel("Maps",
                         titlePanel("Midwest Map Explorer"),
-                        p("Choose a census year and up to two variables to generate and compare maps of the midwest."),
+                        p("Choose a census year and variable to generate and compare maps of the midwest."),
                         helpText("Please note that maps may take up to 30 seconds to render."),
                         sidebarLayout(
+                            
+                            # App keeps disconnecting from the server
+                            # Try doing only one map
                             
                             sidebarPanel(
                                 uiOutput("choose_dataset"),
                                 uiOutput("choose_columns"),
-                                uiOutput("choose_columns2"),
+                                #uiOutput("choose_columns2"),
                                 br(),
                             ),
-                            mainPanel(leafletOutput("map1"),
-                                      leafletOutput("map2"))
+                            mainPanel(leafletOutput("map1")#,
+                                      #leafletOutput("map2")
+                                      )
                         )),
                
                tabPanel("About",
@@ -505,10 +515,11 @@ server <- (function(input, output, session) {
             filter(YEAR == year, myvariable > 0) %>%
             select(GISJOIN, myvariable)
         
-        # Import Census Tract Shapefile into R as SpatialPolygonsDataFrameFormat (SP Dataframe)
+        # Import shapefiles into R as SpatialPolygonsDataFrameFormat (SP Dataframe)
         # dsn is location of folder which contains shapefiles, (.proj, .shp etc.)
         # layer is the filename of the .shp file inside the
         # folder dsn points to. 
+        # all of these filepaths are stored in the "shapefiles" dataframe 
         
         dsnyear <- shapefiles %>% 
             filter(Year == year) %>% 
@@ -531,7 +542,7 @@ server <- (function(input, output, session) {
         
         # Condense size of data for faster processing
         
-        countyyear <- rmapshaper::ms_simplify(countyyear)
+        #countyyear <- rmapshaper::ms_simplify(countyyear)
         
         # Set palette color
         
@@ -550,98 +561,98 @@ server <- (function(input, output, session) {
     })
     
     # map2 dropdown menu
-    output$choose_columns2 <- renderUI({
+    #output$choose_columns2 <- renderUI({
         # If missing input, return to avoid error later in function
-        if(is.null(input$dataset))
-            return()
+        #if(is.null(input$dataset))
+            #return()
         
         # Get the data set with the appropriate name
-        dat <- get(input$dataset)
+        #dat <- get(input$dataset)
         
         # Get rid of "YEAR" and "STATE" so that users don't pick them and make senseless maps
         
-        colnames1 <- names(dat)
-        colnames <- colnames1[!colnames1 %in% "YEAR" & !colnames1 %in% "STATE"]
+        #colnames1 <- names(dat)
+        #colnames <- colnames1[!colnames1 %in% "YEAR" & !colnames1 %in% "STATE"]
         
         # Create the dropdown menu and select all columns by default
-        selectizeInput("columns2", "Choose Variable to Compare:", 
-                       choices  = colnames,
-                       options = list(
-                           placeholder = 'Variables...',
-                           onInitialize = I('function() { this.setValue(""); }')))
-    })
+        #selectizeInput("columns2", "Choose Variable to Compare:", 
+                       #choices  = colnames,
+                       #options = list(
+                           #placeholder = 'Variables...',
+                           #onInitialize = I('function() { this.setValue(""); }')))
+    #})
     
-    output$map2 <- renderLeaflet({
+    #output$map2 <- renderLeaflet({
         # If missing input, return to avoid error later in function
-        if(is.null(input$dataset))
-            return()
+        #if(is.null(input$dataset))
+            #return()
         
         # Get the data set
-        dat <- get(input$dataset)
+        #dat <- get(input$dataset)
         
         # Make sure columns are correct for data set (when data set changes, the
         # columns will initially be for the previous data set)
-        if (is.null(input$columns2) || !(input$columns2 %in% names(dat)))
-            return()
+        #if (is.null(input$columns2) || !(input$columns2 %in% names(dat)))
+            #return()
         
-        year <- dat %>% slice(1) %>% pull(YEAR)
+        #year <- dat %>% slice(1) %>% pull(YEAR)
         
         # Keep the selected columns
-        dat <- dat[, input$columns2, drop = FALSE]
+        #dat <- dat[, input$columns2, drop = FALSE]
         
-        myvar <- input$columns2
+        #myvar <- input$columns2
         
-        datayear <- x %>%
+        #datayear <- x %>%
             # use get() to use the stored variable
             # idk why, but it doesn't work without this
             # the variable must be converted to a double in the original mwData dataset
-            mutate(myvariable = (get(myvar))) %>%
-            filter(YEAR == year, myvariable > 0) %>%
-            select(GISJOIN, myvariable)
+            #mutate(myvariable = (get(myvar))) %>%
+            #filter(YEAR == year, myvariable > 0) %>%
+            #select(GISJOIN, myvariable)
         
         # Import Census Tract Shapefile into R as SpatialPolygonsDataFrameFormat (SP Dataframe)
         # dsn is location of folder which contains shapefiles, (.proj, .shp etc.)
         # layer is the filename of the .shp file inside the
         # folder dsn points to. 
         
-        dsnyear <- shapefiles %>% 
-            filter(Year == year) %>% 
-            pull(Dsn)
-        layeryear <- shapefiles %>% 
-            filter(Year == year) %>% 
-            pull(Layer)
+        #dsnyear <- shapefiles %>% 
+            #filter(Year == year) %>% 
+            #pull(Dsn)
+        #layeryear <- shapefiles %>% 
+            #filter(Year == year) %>% 
+            #pull(Layer)
         
-        countyyear <- sf::st_read(dsn = dsnyear,
-                                  layer = layeryear)
+        #countyyear <- sf::st_read(dsn = dsnyear,
+                                  #layer = layeryear)
         
-        countyyear <-
-            countyyear %>%
-            merge(datayear, "GISJOIN")
+        #countyyear <-
+            #countyyear %>%
+            #merge(datayear, "GISJOIN")
         
         
         # Set projection of tracts dataset to `projection` required by leaflet
         
-        countyyear <- sf::st_transform(countyyear, crs="+init=epsg:4326")
+        #countyyear <- sf::st_transform(countyyear, crs="+init=epsg:4326")
         
         # Condense size of data for faster processing
         
-        countyyear <- rmapshaper::ms_simplify(countyyear)
+        #countyyear <- rmapshaper::ms_simplify(countyyear)
         
         # Set palette color
         
-        pal <- colorNumeric("viridis", NULL)
+        #pal <- colorNumeric("viridis", NULL)
         
         #  Plot the data
         
         # use shiny to add a title, which will be be equivalent to myvar
         
-        leaflet(countyyear) %>%
-            addTiles() %>%
-            addPolygons(stroke = FALSE, smoothFactor = 0.3, fillOpacity = 1,
-                        fillColor = ~pal(myvariable)) %>%
-            addLegend(pal = pal, values = ~myvariable, opacity = 1.0, title = myvar)
+        #leaflet(countyyear) %>%
+            #addTiles() %>%
+            #addPolygons(stroke = FALSE, smoothFactor = 0.3, fillOpacity = 1,
+                        #fillColor = ~pal(myvariable)) %>%
+            #addLegend(pal = pal, values = ~myvariable, opacity = 1.0, title = myvar)
         
-    })
+    #})
     
     
     
