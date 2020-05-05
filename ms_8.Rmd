@@ -27,7 +27,9 @@ library(gganimate)
 library(patchwork)
 library(magick)
 library(webshot)
-webshot::install_phantomjs()
+library(mapview)
+# Probably not necessary
+#webshot::install_phantomjs()
 
 # packages for mapping
 library(leaflet)
@@ -537,7 +539,7 @@ appPlan <- mwData %>%
   select(-STATEA:-COUNTY)
 
 # myvar options will be determined by column names of appPlan & displayed via dropdown widget
-myvar <- "Value of Farms"
+myvar <- "Average Implement Value"
 
 datayear <- mwData %>%
   # use get() to use the stored variable
@@ -573,7 +575,7 @@ countyyear <- sf::st_transform(countyyear, crs="+init=epsg:4326")
 
 # Condense size of data for faster processing
 
-countyyear <- rmapshaper::ms_simplify(countyyear)
+#countyyear <- rmapshaper::ms_simplify(countyyear)
 
 # Set palette color
 
@@ -587,9 +589,155 @@ leaflet(countyyear) %>%
   addTiles() %>%
   addPolygons(stroke = FALSE, smoothFactor = 0.3, fillOpacity = 1,
               fillColor = ~pal(myvariable)) %>%
+  #setView(-87.4290, 43, zoom = 6) %>%
   addLegend(pal = pal, values = ~myvariable, opacity = 1.0, title = myvar)
 
 ```
+
+```{r}
+# Saving maps as pngs
+# Since I couldn't get my interactive maps to run on shiny, this is the supremely disappointing 
+# work-around
+
+## 'leaflet' objects (image above)
+
+# mapshot(enroll_1870, file = "enroll_1870.png")
+
+# This initially worked, but then R started crashing every time I tried to run it
+# Now I'm resorting to sCreEnsHotS
+
+```
+
+# SCREENSHOT Section
+# Delete later
+
+```{r}
+year <- 1880
+
+#choices for myvar will be determined by: 
+appPlan <- mwData %>%
+  filter(YEAR == year) %>%
+  select_if(~ !all(is.na(.))) %>%
+  select(-STATEA:-COUNTY)
+
+# myvar options will be determined by column names of appPlan & displayed via dropdown widget
+myvar <- "Average Implement Value"
+
+datayear <- mwData %>%
+  # use get() to use the stored variable
+  # idk why, but it doesn't work without this
+  # the variable must be converted to a double in the original mwData dataset
+  mutate(myvariable = (get(myvar))) %>%
+  filter(YEAR == year, myvariable > 0) %>%
+  select(GISJOIN, myvariable)
+
+# Import Census Tract Shapefile into R as SpatialPolygonsDataFrameFormat (SP Dataframe)
+# dsn is location of folder which contains shapefiles, (.proj, .shp etc.)
+# layer is the filename of the .shp file inside the
+# folder dsn points to. 
+
+dsnyear <- shapefiles %>% 
+  filter(Year == year) %>% 
+  pull(Dsn)
+layeryear <- shapefiles %>% 
+  filter(Year == year) %>% 
+  pull(Layer)
+
+countyyear <- sf::st_read(dsn = dsnyear,
+                         layer = layeryear)
+
+countyyear <-
+  countyyear %>%
+  merge(datayear, "GISJOIN")
+
+
+# Set projection of tracts dataset to `projection` required by leaflet
+
+countyyear <- sf::st_transform(countyyear, crs="+init=epsg:4326")
+
+# Condense size of data for faster processing
+
+#countyyear <- rmapshaper::ms_simplify(countyyear)
+
+# Set palette color
+
+pal <- colorNumeric("viridis", NULL)
+
+#  Plot the data
+
+# use shiny to add a title, which will be be equivalent to myvar
+
+leaflet(countyyear) %>%
+  addTiles() %>%
+  addPolygons(stroke = FALSE, smoothFactor = 0.3, fillOpacity = 1,
+              fillColor = ~pal(myvariable)) %>%
+  #setView(-87.4290, 43, zoom = 6) %>%
+  addLegend(pal = pal, values = ~myvariable, opacity = 1.0, title = myvar)
+```
+
+
+```{r}
+year <- 1890
+
+
+# myvar options will be determined by column names of appPlan & displayed via dropdown widget
+myvar <- "Average Implement Value"
+
+datayear <- mwData %>%
+  # use get() to use the stored variable
+  # idk why, but it doesn't work without this
+  # the variable must be converted to a double in the original mwData dataset
+  mutate(myvariable = (get(myvar))) %>%
+  filter(YEAR == year, myvariable > 0) %>%
+  select(GISJOIN, myvariable)
+
+# Import Census Tract Shapefile into R as SpatialPolygonsDataFrameFormat (SP Dataframe)
+# dsn is location of folder which contains shapefiles, (.proj, .shp etc.)
+# layer is the filename of the .shp file inside the
+# folder dsn points to. 
+
+dsnyear <- shapefiles %>% 
+  filter(Year == year) %>% 
+  pull(Dsn)
+layeryear <- shapefiles %>% 
+  filter(Year == year) %>% 
+  pull(Layer)
+
+countyyear <- sf::st_read(dsn = dsnyear,
+                         layer = layeryear)
+
+countyyear <-
+  countyyear %>%
+  merge(datayear, "GISJOIN")
+
+
+# Set projection of tracts dataset to `projection` required by leaflet
+
+countyyear <- sf::st_transform(countyyear, crs="+init=epsg:4326")
+
+# Condense size of data for faster processing
+
+#countyyear <- rmapshaper::ms_simplify(countyyear)
+
+# Set palette color
+
+pal <- colorNumeric("viridis", NULL)
+
+#  Plot the data
+
+# use shiny to add a title, which will be be equivalent to myvar
+
+leaflet(countyyear) %>%
+  addTiles() %>%
+  addPolygons(stroke = FALSE, smoothFactor = 0.3, fillOpacity = 1,
+              fillColor = ~pal(myvariable)) %>%
+  #setView(-87.4290, 43, zoom = 6) %>%
+  addLegend(pal = pal, values = ~myvariable, opacity = 1.0, title = myvar)
+```
+
+
+
+
 
 ```{r experimentalModels, cache = TRUE}
 
@@ -946,12 +1094,28 @@ anim_save("final/pop_gif.gif", pop_gif)
 # New Dataset for Mapping
 
 ```{r mwData-shapefile-merger}
+
+# Ultimately, this didn't work
+# I'm giving up and saving individual leaflets as 
+
 # NEW tibble
 # columns: COUNTYA?, YEAR, variable, value
 
+# Plan: make the huge sf object for each variable from 1870-1890
+# bind all the rows
+# it will be huge
+# save as rds
+# read in at the beginning, just filter by year and variable, which now each have their own column
+# figure out how to get widgets to work
+
 mapData1 <- mwData %>% pivot_longer(cols = "Value of Farms":"Illiteracy Rate", names_to = "Variable")
 
-mapData <- left_join(mapData1, shapefiles, by = c("YEAR" = "Year"))
+mapData <- left_join(mapData1, shapefiles, by = c("YEAR" = "Year")) %>%
+  
+  # Only do the first three decades
+  # Shiny doesn't give you enough space to upload the rest anyway
+  
+  filter(YEAR == "1870" | YEAR == "1880" | YEAR == "1890")
 
 ```
 
@@ -979,6 +1143,14 @@ datayear <- mapData %>%
 # layer is the filename of the .shp file inside the
 # folder dsn points to. 
 
+dsnyear <- datayear %>% 
+  slice(1) %>% 
+  pull(Dsn)
+
+layeryear <- datayear %>% 
+  slice(1) %>% 
+  pull(Layer)
+
 countyyear <- sf::st_read(dsn = dsnyear,
                          layer = layeryear)
 # IN PROGRESS, START HERE
@@ -1001,7 +1173,7 @@ countyyear <- sf::st_transform(countyyear, crs="+init=epsg:4326")
 
 # Condense size of data for faster processing
 
-countyyear <- rmapshaper::ms_simplify(countyyear)
+countyyear1 <- rmapshaper::ms_simplify(countyyear)
 
 # Set palette color
 
@@ -1016,5 +1188,77 @@ leaflet(countyyear) %>%
   addPolygons(stroke = FALSE, smoothFactor = 0.3, fillOpacity = 1,
               fillColor = ~pal(value)) %>%
   addLegend(pal = pal, values = ~value, opacity = 1.0, title = myvar)
+```
+
+```{r}
+year <- 1870
+
+# myvar options will be determined by column names of appPlan & displayed via dropdown widget
+myvar <- "Average Farm Value"
+
+datayear <- mapData %>%
+  # use get() to use the stored variable
+  # idk why, but it doesn't work without this
+  # the variable must be converted to a double in the original mwData dataset
+  filter(YEAR == year) %>%
+  select(GISJOIN, YEAR, Variable, value, Dsn, Layer)
+
+# Import Census Tract Shapefile into R as SpatialPolygonsDataFrameFormat (SP Dataframe)
+# dsn is location of folder which contains shapefiles, (.proj, .shp etc.)
+# layer is the filename of the .shp file inside the
+# folder dsn points to. 
+
+dsnyear <- datayear %>% 
+  slice(1) %>% 
+  pull(Dsn)
+
+layeryear <- datayear %>% 
+  slice(1) %>% 
+  pull(Layer)
+
+countyyear <- sf::st_read(dsn = dsnyear,
+                         layer = layeryear)
+
+# make a huge sf object that has all of the info
+# save as RDS
+# use only one filter (for year and variable) with the code calling the palette and below
+
+countyyear <-
+  countyyear %>%
+  merge(datayear, "GISJOIN")
+
+# wow you can save sf objects as RDS files, apparently!
+# do this once you have everything done
+# but then again, if I can save this as an RDS, do I actually need to pivot longer? does that make sense?
+#saveRDS(countyyear, file = "testSfObj.rds")
+
+# Set projection of tracts dataset to `projection` required by leaflet
+
+countyyear <- sf::st_transform(countyyear, crs="+init=epsg:4326")
+
+# Condense size of data for faster processing
+# This is taking too long to run; session encounters a fatal error
+# What if I simplify after filtering?
+# countyyear <- rmapshaper::ms_simplify(countyyear)
+
+countyear <- countyyear %>%
+  filter(Variable == myvar)
+
+countyyear <- rmapshaper::ms_simplify(countyyear)
+
+pal <- colorNumeric("viridis", NULL)
+
+#  Plot the data
+
+# use shiny to add a title, which will be be equivalent to myvar
+
+leaflet(countyyear) %>%
+  addTiles() %>%
+  addPolygons(stroke = FALSE, smoothFactor = 0.3, fillOpacity = 1,
+              fillColor = ~pal(value)) %>%
+  #setView(-87.4290, 43, zoom = 6) %>%
+  addLegend(pal = pal, values = ~value, opacity = 1.0, title = myvar)
+  
+
 ```
 
