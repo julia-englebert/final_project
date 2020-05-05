@@ -111,7 +111,6 @@ ui <- fluidPage(
                                                  fluidRow(column(width = 5, textOutput("acre_com")),
                                                           column(width = 7, align = "center",
                                                                  imageOutput("acre_gif")))
-                                          
                                         ),
                                         tabPanel("Urbanization",
                                                  # Generate a row with a sidebar
@@ -259,13 +258,15 @@ server <- (function(input, output, session) {
     
     output$acre_com <- renderText({
         
-        "The bar plot on the left shows that a general upward trend in the number of acres allotted to farming each year. What happened in 1920? It’s difficult to say, but perhaps the Economic Boom of the 1920s followed by the Great Crash of 1929 caused farmers to purchase and then lose vast amounts of land. The line plot on the right shows that the number of farms increased until the early 20th century before beginning to decline in most states. Taken together, these plots show that farms in the Midwest have been steadily increasing in size, while the number of people owning farms has been steadily decreasing."
+        "The bar plot on the left show a general upward trend in the number of acres allotted to farming each year. What explains the jump in 1920? When the United States entered World War I in 1917, Europe was facing serious food shortages due to war casualties and farmers leaving their homes to fight. The US played an essential role in sustaining the Allied war effort through increased production— the government called for increases of up to 10% on many commodities.
+        The war spurred on the Economic Boom of the 1920s followed by the Great Crash of 1929, causing farmers to purchase and then sell off vast amounts of land. The line plot on the right shows that the number of farms increased until the early 20th century before beginning to decline in most states. Taken together, these plots show that farms in the Midwest have been steadily increasing in size, while the number of people owning farms has been steadily decreasing."
     })
     
     output$acre_gif <- renderImage({
         list(src = "acre_gif.gif")
         
     }, deleteFile = FALSE)
+    
     
     output$pop_com <- renderText({
         
