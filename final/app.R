@@ -14,7 +14,7 @@ library(haven)
 library(tidyverse)
 library(gt)
 library(devtools)
-#library(tibble)
+library(tibble)
 
 # I'm getting a warning about the foreign package when I try to deploy
 # Luckily, it's not necessary
@@ -23,7 +23,7 @@ library(devtools)
 library(scales)
 library(shinythemes)
 #library(plotly)
-library(leaflet)
+#library(leaflet)
 library(broom)
 # probably don't need these, but double check
 #library(patchwork)
@@ -69,60 +69,11 @@ shapefiles <- readRDS(file = "shapefiles.rds") %>%
 
 x <- readRDS("mwData.rds")
 
-# Now subset by year
+# Build a tibble for the map pngs
 
-# I tried saving these as Rds files as well, but I kept getting a weird error
-
-Census_1870 <- x %>% filter(YEAR == "1870") %>%
-    select_if(~ !all(is.na(.))) %>%
-    select(-STATEA:-GISJOIN & -COUNTY)
-
-Census_1880 <- x %>% filter(YEAR == "1880") %>%
-    select_if(~ !all(is.na(.))) %>%
-    select(-STATEA:-GISJOIN & -COUNTY)
-
-Census_1890 <- x %>% filter(YEAR == "1890") %>%
-    select_if(~ !all(is.na(.))) %>%
-    select(-STATEA:-GISJOIN & -COUNTY)
-
-# Code for the rest of the files
-# If only I could upload them all 
-
-#Census_1900 <- x %>% filter(YEAR == "1900") %>%
-    #select_if(~ !all(is.na(.))) %>%
-    #select(-STATEA:-GISJOIN & -COUNTY)
-
-#Census_1910 <- x %>% filter(YEAR == "1910") %>%
-    #select_if(~ !all(is.na(.))) %>%
-    #select(-STATEA:-GISJOIN & -COUNTY)
-
-#Census_1920 <- x %>% filter(YEAR == "1920") %>%
-    #select_if(~ !all(is.na(.))) %>%
-    #select(-STATEA:-GISJOIN & -COUNTY)
-
-#Census_1930 <- x %>% filter(YEAR == "1930") %>%
-    #select_if(~ !all(is.na(.))) %>%
-    #select(-STATEA:-GISJOIN & -COUNTY)
-
-#Census_1940 <- x %>% filter(YEAR == "1940") %>%
-    #select_if(~ !all(is.na(.))) %>%
-    #select(-STATEA:-GISJOIN & -COUNTY)
-
-#Census_1950 <- x %>% filter(YEAR == "1950") %>%
-    #select_if(~ !all(is.na(.))) %>%
-    #select(-STATEA:-GISJOIN & -COUNTY)
-
-#Census_1960 <- x %>% filter(YEAR == "1960") %>%
-    #select_if(~ !all(is.na(.))) %>%
-    #select(-STATEA:-GISJOIN & -COUNTY)
-
-
-
-# Combine the datasets into a vector, renaming them by only the year 
-# This is the code for include all GIS files, but I had to delete most of them because they were HUGE
-# data_sets <- c("1870" = "Census_1870", "1880" = "Census_1880", "1890" = "Census_1890", "1900" = "Census_1900", "1910" = "Census_1910", "1920" = "Census_1920",  "1930" ="Census_1930",  "1940" ="Census_1940",  "1950" ="Census_1950",  "1960" ="Census_1960")
-# This is the code for the remaining files
-data_sets <- c("1870" = "Census_1870", "1880" = "Census_1880", "1890" = "Census_1890")
+mapPngs <- tibble(year = c(1870, 1870, 1870, 1870, 1870, 1880, 1880, 1880, 1880, 1880, 1890, 1890, 1890, 1890, 1890),
+                  variable = c("Percentage School Enrollment", "Average Farm Value", "Average Cows per Farm", "Average Implement Value", "Average Farm Size (Acres)", "Percentage School Enrollment", "Average Farm Value", "Average Cows per Farm", "Average Implement Value", "Average Farm Size (Acres)", "Percentage School Enrollment", "Average Farm Value", "Average Cows per Farm", "Average Implement Value", "Average Farm Size (Acres)"),
+                  path = c("enroll_1870.png", "avg_value_1870.png", "cows_1870.png", "implement_1870.png", "avg_size_1870.png", NA, "avg_value_1880.png", "cows_1880.png", "implement_1880.png", "avg_size_1880.png", "enroll_1890.png", "avg_value_1890.png", "cows_1890.png", "implement_1890.png", "avg_size_1890.png"))
 
 # Read in the dataset for maps and models
 
@@ -251,22 +202,22 @@ ui <- fluidPage(
                
                tabPanel("Maps",
                         titlePanel("Midwest Map Explorer"),
-                        p("Choose a census year and variable to generate and compare maps of the midwest."),
-                        helpText("Please note that maps may take up to 30 seconds to render."),
+                        p("Choose a census year and variable to view and compare maps of the midwest."),
+                        helpText("Please note that no enrollment data was available for the year 1880."),
                         sidebarLayout(
                             
                             # App keeps disconnecting from the server
                             # Try doing only one map
                             
                             sidebarPanel(
-                                uiOutput("choose_dataset"),
-                                uiOutput("choose_columns"),
-                                #uiOutput("choose_columns2"),
-                                br(),
-                            ),
-                            mainPanel(leafletOutput("map1")#,
-                                      #leafletOutput("map2")
-                                      )
+                                selectInput("mapYear", "Year:", 
+                                            choices=c("1870" = "1870", "1880" = "1880", "1890" = "1890"), 
+                                            multiple = FALSE),
+                            selectInput("mapVariable", "Variable:", 
+                                        choices=c("Percentage School Enrollment", "Average Farm Value", "Average Cows per Farm", "Average Implement Value", "Average Farm Size (Acres)"), 
+                                        multiple = FALSE)),
+
+                            mainPanel(imageOutput("map"))
                         )),
                
                tabPanel("About",
@@ -462,207 +413,16 @@ server <- (function(input, output, session) {
     
     # Map output
     
-    output$choose_dataset <- renderUI({
-        selectInput("dataset", "Choose Census Year:", as.list(data_sets))
-    })
+    output$map <- renderImage({
+        filename <- mapPngs %>% filter(year == input$mapYear, variable == input$mapVariable) %>%
+            slice(1) %>%
+            pull(path)
+        list(src = filename)
+        
+    }, deleteFile = FALSE)
     
-    # Check boxes
-    output$choose_columns <- renderUI({
-        # If missing input, return to avoid error later in function
-        if(is.null(input$dataset))
-            return()
-        
-        # Get the data set with the appropriate name
-        dat <- get(input$dataset)
-        
-        # Get rid of "YEAR" and "STATE" so that users don't pick them and make senseless maps
-        
-        colnames1 <- names(dat)
-        colnames <- colnames1[!colnames1 %in% "YEAR" & !colnames1 %in% "STATE"]
-        
-        # Create the dropdown menu and select all columns by default
-        selectizeInput("columns", "Choose Variable:", 
-                       choices  = colnames)
-    })
-    
-    
-    # Map output
-    output$map1 <- renderLeaflet({
-        # If missing input, return to avoid error later in function
-        if(is.null(input$dataset))
-            return()
-        
-        # Get the data set
-        dat <- get(input$dataset)
-        
-        # Make sure columns are correct for data set (when data set changes, the
-        # columns will initially be for the previous data set)
-        if (is.null(input$columns) || !(input$columns %in% names(dat)))
-            return()
-        
-        year <- dat %>% slice(1) %>% pull(YEAR)
-        
-        # Keep the selected columns
-        dat <- dat[, input$columns, drop = FALSE]
-        
-        myvar <- input$columns
-        
-        datayear <- x %>%
-            # use get() to use the stored variable
-            # idk why, but it doesn't work without this
-            # the variable must be converted to a double in the original mwData dataset
-            mutate(myvariable = (get(myvar))) %>%
-            filter(YEAR == year, myvariable > 0) %>%
-            select(GISJOIN, myvariable)
-        
-        # Import shapefiles into R as SpatialPolygonsDataFrameFormat (SP Dataframe)
-        # dsn is location of folder which contains shapefiles, (.proj, .shp etc.)
-        # layer is the filename of the .shp file inside the
-        # folder dsn points to. 
-        # all of these filepaths are stored in the "shapefiles" dataframe 
-        
-        dsnyear <- shapefiles %>% 
-            filter(Year == year) %>% 
-            pull(Dsn)
-        layeryear <- shapefiles %>% 
-            filter(Year == year) %>% 
-            pull(Layer)
-        
-        countyyear <- sf::st_read(dsn = dsnyear,
-                                  layer = layeryear)
-        
-        countyyear <-
-            countyyear %>%
-            merge(datayear, "GISJOIN")
-        
-        
-        # Set projection of tracts dataset to `projection` required by leaflet
-        
-        countyyear <- sf::st_transform(countyyear, crs="+init=epsg:4326")
-        
-        # Condense size of data for faster processing
-        
-        #countyyear <- rmapshaper::ms_simplify(countyyear)
-        
-        # Set palette color
-        
-        pal <- colorNumeric("viridis", NULL)
-        
-        #  Plot the data
-        
-        # use shiny to add a title, which will be be equivalent to myvar
-        
-        leaflet(countyyear) %>%
-            addTiles() %>%
-            addPolygons(stroke = FALSE, smoothFactor = 0.3, fillOpacity = 1,
-                        fillColor = ~pal(myvariable)) %>%
-            addLegend(pal = pal, values = ~myvariable, opacity = 1.0, title = myvar)
-        
-    })
-    
-    # map2 dropdown menu
-    #output$choose_columns2 <- renderUI({
-        # If missing input, return to avoid error later in function
-        #if(is.null(input$dataset))
-            #return()
-        
-        # Get the data set with the appropriate name
-        #dat <- get(input$dataset)
-        
-        # Get rid of "YEAR" and "STATE" so that users don't pick them and make senseless maps
-        
-        #colnames1 <- names(dat)
-        #colnames <- colnames1[!colnames1 %in% "YEAR" & !colnames1 %in% "STATE"]
-        
-        # Create the dropdown menu and select all columns by default
-        #selectizeInput("columns2", "Choose Variable to Compare:", 
-                       #choices  = colnames,
-                       #options = list(
-                           #placeholder = 'Variables...',
-                           #onInitialize = I('function() { this.setValue(""); }')))
-    #})
-    
-    #output$map2 <- renderLeaflet({
-        # If missing input, return to avoid error later in function
-        #if(is.null(input$dataset))
-            #return()
-        
-        # Get the data set
-        #dat <- get(input$dataset)
-        
-        # Make sure columns are correct for data set (when data set changes, the
-        # columns will initially be for the previous data set)
-        #if (is.null(input$columns2) || !(input$columns2 %in% names(dat)))
-            #return()
-        
-        #year <- dat %>% slice(1) %>% pull(YEAR)
-        
-        # Keep the selected columns
-        #dat <- dat[, input$columns2, drop = FALSE]
-        
-        #myvar <- input$columns2
-        
-        #datayear <- x %>%
-            # use get() to use the stored variable
-            # idk why, but it doesn't work without this
-            # the variable must be converted to a double in the original mwData dataset
-            #mutate(myvariable = (get(myvar))) %>%
-            #filter(YEAR == year, myvariable > 0) %>%
-            #select(GISJOIN, myvariable)
-        
-        # Import Census Tract Shapefile into R as SpatialPolygonsDataFrameFormat (SP Dataframe)
-        # dsn is location of folder which contains shapefiles, (.proj, .shp etc.)
-        # layer is the filename of the .shp file inside the
-        # folder dsn points to. 
-        
-        #dsnyear <- shapefiles %>% 
-            #filter(Year == year) %>% 
-            #pull(Dsn)
-        #layeryear <- shapefiles %>% 
-            #filter(Year == year) %>% 
-            #pull(Layer)
-        
-        #countyyear <- sf::st_read(dsn = dsnyear,
-                                  #layer = layeryear)
-        
-        #countyyear <-
-            #countyyear %>%
-            #merge(datayear, "GISJOIN")
-        
-        
-        # Set projection of tracts dataset to `projection` required by leaflet
-        
-        #countyyear <- sf::st_transform(countyyear, crs="+init=epsg:4326")
-        
-        # Condense size of data for faster processing
-        
-        #countyyear <- rmapshaper::ms_simplify(countyyear)
-        
-        # Set palette color
-        
-        #pal <- colorNumeric("viridis", NULL)
-        
-        #  Plot the data
-        
-        # use shiny to add a title, which will be be equivalent to myvar
-        
-        #leaflet(countyyear) %>%
-            #addTiles() %>%
-            #addPolygons(stroke = FALSE, smoothFactor = 0.3, fillOpacity = 1,
-                        #fillColor = ~pal(myvariable)) %>%
-            #addLegend(pal = pal, values = ~myvariable, opacity = 1.0, title = myvar)
-        
-    #})
-    
-    
-    
-    output$model1 <- render_gt({
-        
-        # experimental model
-        
-        model1
-        
-    })
+    # sometimes R flags this code chunk and says there's a bug, but it still works
+    # (just press continue in the R console)
     
     output$codebook <- renderTable({
         if (length(input$variables) == 0) return(codebook)
