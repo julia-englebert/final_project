@@ -202,7 +202,7 @@ ui <- fluidPage(
                
                tabPanel("Maps",
                         titlePanel("Midwest Map Explorer"),
-                        p("Choose a census year and variable to view and compare maps of the midwest."),
+                        p("Choose a census year and variable to view maps of the midwest."),
                         helpText("Please note that no enrollment data was available for the year 1880."),
                         sidebarLayout(
                             
@@ -235,12 +235,14 @@ ui <- fluidPage(
                         titlePanel("Citations"),
                         p("Steven Manson, Jonathan Schroeder, David Van Riper, and Steven Ruggles. IPUMS National Historical Geographic Information System: Version 14.0 [Database]. Minneapolis, MN: IPUMS. 2019. http://doi.org/10.18128/D050.V14.0"),
                         p("The College of William and Mary and the Minnesota Population Center. School Attendance Boundary Information System (SABINS): Version 1.0. Minneapolis, MN: University of Minnesota 2011."),
-                        p("Ian Webster. U.S. Inflation Calculator: 1635-2020, Department of Labor Data. Official Data Foundation, https://www.officialdata.org.")
+                        p("Ian Webster. U.S. Inflation Calculator: 1635-2020, Department of Labor Data. Official Data Foundation, https://www.officialdata.org."),
+                        p("Todd Kosmerick. “World War I and Agriculture.” NC State University Libraries, 18 Aug. 2017, https://www.lib.ncsu.edu/news/special-collections/world-war-i-and-agriculture.")
                         ),
                
                tabPanel("Codebook",
                         titlePanel("How were variables measured for this project?"),
-                        p("Choose a variable to find out! Take special note of the changes in school enrollment and farm value metrics over time."), 
+                        p("Choose a variable to find out! Take special note of the changes in school enrollment and farm value metrics over time."),
+                        p("Please note that all dollar values are adjusted for inflation, using 2020 as the base year."),
                         varSelectInput("variables", "Variable:", codebook, multiple = FALSE),
                         helpText("These variable descriptions represent a condensed version of the codebooks provided by IPUMS NHGIS."),
                         tableOutput("codebook")
