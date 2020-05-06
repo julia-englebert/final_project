@@ -539,7 +539,7 @@ appPlan <- mwData %>%
   select(-STATEA:-COUNTY)
 
 # myvar options will be determined by column names of appPlan & displayed via dropdown widget
-myvar <- "Average Implement Value"
+myvar <- "Number of Cows per Farm"
 
 datayear <- mwData %>%
   # use get() to use the stored variable
@@ -910,6 +910,55 @@ cowedu_plot <- allData %>%
 #ggsave("final/cowedu_plot.png", plot = cowedu_plot)
 
 ```
+
+```{r horses}
+# Do horses have the same effect as cows??
+
+# Prep data
+horseData <- allData %>% mutate(horses_per_farm = horses/n_farm)
+
+horseedu_model <- horseData %>%
+  select(YEAR, pct_enrolled, horses_per_farm, avg_value_farm) %>%
+  na.omit() %>%
+  lm(pct_enrolled ~ horses_per_farm*avg_value_farm, data = .) %>%
+  tidy(conf.int = TRUE) 
+
+#saveRDS(cowedu_model, "final/cowedu_model.rds")
+  
+horseedu_gt <- horseedu_model %>%
+  select(term, conf.low, estimate, conf.high) %>%
+  gt() %>%
+  tab_header(title = "Effect Horses and Farm Value Enrollment",
+             subtitle = "With 95% Confidence Interval") %>%
+  cols_label(term = "Coefficient Name", conf.low = "Lower Bound", estimate = "Estimated Value", conf.high = "Upper Bound") %>%
+  fmt_number(columns = vars(conf.low, estimate, conf.high), decimals = 4)
+
+horseedu_gt
+
+#gtsave(data = horseedu_gt, filename = "final/horseedu_gt.png")
+
+# horse plot
+
+horseedu_plot <- horseData %>%
+  select(YEAR, pct_enrolled, horses_per_farm) %>%
+  na.omit() %>%
+  mutate(YEAR = as.factor(YEAR)) %>%
+  group_by(YEAR) %>%
+  ggplot(aes(x = horses_per_farm, y = pct_enrolled, color = YEAR)) +
+  geom_point(alpha = 0.1) +
+  geom_smooth(method = "lm", se = FALSE) +
+  scale_color_viridis_d() +
+  ylim(0, 45) +
+  scale_x_log10(labels = comma) +
+  labs(title = "Horses and Education",
+       subtitle = "Relationship between the number of horses per farm\nand school enrollment, by county",
+       x = "Average Horses per Farm",
+       y = "Percent of Population Enrolled in School") +
+  theme_classic()
+
+horseedu_plot
+```
+
 
 ```{r farmTrends, cache=TRUE}
 # this takes foever--cache it
